@@ -1,41 +1,72 @@
-# Prerequisites
-*.d
+# Compilación
+bin/
+obj/
+[Ll]og/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Archivos de VS Code y Rider
+.vscode/
+.idea/
+*.sln.iml
 
-# Precompiled Headers
-*.gch
-*.pch
+# Paquetes y dependencias
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
 
-# Linker files
-*.ilk
-
-# Debugger Files
+# Dotnet y NuGet
+*.nuget.props
+*.nuget.targets
+*.nuproj
+*.deps.json
+*.runtimeconfig.dev.json
+*.runtimeconfig.json
+*.dll
+*.exe
 *.pdb
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# Configuraciones temporales
+*.tmp
+*.bak
+*.old
+*.log
 
-# Fortran module files
-*.mod
-*.smod
+# Test results
+TestResults/
+*.coverage
+*.coveragexml
+*.testresults
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+# User secrets
+secrets.json
 
-# Executables
-*.exe
-*.out
-*.app
+# Archivos de publicación
+publish/
+out/
 
-# debug information files
-*.dwo
+# Archivos de Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Archivos de Rider
+.idea/
+
+# Archivos generados por herramientas
+Generated\ Files/
+
+# Archivos de configuración de entorno
+.env
+.env.*
+
+# Archivos del sistema
+*.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos de bloqueo de herramientas
+global.json
