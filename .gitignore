@@ -71,3 +71,5 @@ desktop.ini
 # Archivos de bloqueo de herramientas
 global.json
 /HelloworldApi/Properties
+
+Helloworld/obj/
