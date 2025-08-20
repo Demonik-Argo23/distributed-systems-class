@@ -19,7 +19,7 @@ public class Peer
             Console.WriteLine($"Connected to peer at {ipAddress}:{port}");
 
             var receiveTask = ReceiveMessage();
-            await SendMessage("Hola :D este es mi primer mensaje");
+            await SendMessage();
             await receiveTask;
         }
         catch (Exception ex)
@@ -38,13 +38,13 @@ public class Peer
             Console.WriteLine("Connection established with a client.");
 
             var receiveTask = ReceiveMessage();
-            await SendMessage("Hola :D este es mi primer mensaje");
+            await SendMessage();
             await receiveTask;
 
         }
-        catch (ArgumentException ex)
+        catch (Exception ex)
         {
-            Console.WriteLine("Connection closed :(" + ex.Message);
+            Console.WriteLine("Connection closed " + ex.Message);
         }
     }
 
@@ -54,26 +54,39 @@ public class Peer
         {
             var stream = _tcpClient?.GetStream();
             var reader = new StreamReader(stream, Encoding.UTF8);
-            var message = await reader.ReadLineAsync();
-            Console.WriteLine($"Peer message: {message}");
+            while (true)
+            {
+                var message = await reader.ReadLineAsync();
+                if (message?.ToLower() == "exit")
+                {
+                    break;
+                }
+                Console.WriteLine($"Peer message: {message}");
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error receiving message: {ex.Message}");
         }
-        finally
-        {
-            Close();
-        }
+
     }
 
-    public async Task SendMessage(string message)
+    public async Task SendMessage()
     {
         try
         {
             var stream = _tcpClient?.GetStream();
             var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
-            await writer.WriteLineAsync(message);
+            while (true)
+            {
+                var message = Console.ReadLine();
+                if (message?.ToLower() == "exit")
+                {
+                    await writer.WriteLineAsync("exit");
+                    break;
+                }
+                await writer.WriteLineAsync(message);
+            }
         }
         catch (Exception ex)
         {
