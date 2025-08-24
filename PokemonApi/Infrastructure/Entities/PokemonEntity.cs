@@ -23,6 +23,11 @@ namespace PokemonApi.Infrastructure.Entities
         {
             get; set;
         }
+        // HP (Health Points)
+        public int Hp
+        {
+            get; set;
+        }
         public string Attack
         {
             get; set;
