@@ -71,3 +71,6 @@ desktop.ini
 # Archivos de bloqueo de herramientas
 global.json
 /HelloworldApi/Properties
+distributed-systems-class.sln
+Helloworld/obj/Debug/net9.0/Helloworld.AssemblyInfo.cs
+Helloworld/obj/Debug/net9.0/Helloworld.AssemblyInfoInputs.cache
