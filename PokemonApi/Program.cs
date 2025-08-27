@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PokemonApi.Infrastructure;
+using PokemonApi.Repositories;
 using PokemonApi.Services;
 using SoapCore;
 
@@ -7,6 +8,7 @@ using SoapCore;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSoapCore();
 builder.Services.AddSingleton<IPokemonService, PokemonService>();
+builder.Services.AddScoped<IPokemonRepository, PokemonRepository>();
 
 builder.Services.AddDbContext<RelationalDbContext>(options =>
 options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
