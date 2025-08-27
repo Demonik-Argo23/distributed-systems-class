@@ -11,4 +11,6 @@ public class StatsDto
     public int Defense { get; set; }
     [DataMember(Name = "Speed", Order = 3)]
     public int Speed { get; set; }
+    [DataMember(Name = "Hp", Order = 4)]
+    public int Hp { get; set; }
 }
