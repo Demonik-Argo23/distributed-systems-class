@@ -7,7 +7,7 @@ using SoapCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSoapCore();
-builder.Services.AddSingleton<IPokemonService, PokemonService>();
+builder.Services.AddScoped<IPokemonService, PokemonService>();
 builder.Services.AddScoped<IPokemonRepository, PokemonRepository>();
 
 builder.Services.AddDbContext<RelationalDbContext>(options =>
