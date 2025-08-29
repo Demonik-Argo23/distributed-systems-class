@@ -9,5 +9,9 @@ public interface IPokemonService
     [OperationContract]
     Task<PokemonResponseDto> CreatePokemon(CreatePokemonDto pokemon, CancellationToken cancellationToken);
 
+    [OperationContract]
+    Task<PokemonResponseDto> GetPokemonById(Guid id, CancellationToken cancellationToken);
 
+    [OperationContract]
+    Task<IList<PokemonResponseDto>> GetPokemonByName(string name, CancellationToken cancellationToken);
 }

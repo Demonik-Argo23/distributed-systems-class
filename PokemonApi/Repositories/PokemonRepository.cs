@@ -15,9 +15,24 @@ public class PokemonRepository : IPokemonRepository
 
     }
 
+    public async Task<IReadOnlyList<Pokemon>> GetPokemonsByNameAsync(string name, CancellationToken cancellationToken)
+    {
+        //select * from pokemons where name like '%TEXTO%' 
+        var pokemons = await _context.Pokemons.AsNoTracking()
+        .Where(s => s.Name.Contains(name)).ToListAsync(cancellationToken);
+        return pokemons.ToModel();
+    }
+
+    public async Task<Pokemon?> GetPokemonByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        //SELECT * FROM Pokemons WHERE Id = id LIMIT 1
+        var pokemon = await _context.Pokemons.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        return pokemon?.ToModel();
+    }
+
     public async Task<Pokemon> GetByNameAsync(string name, CancellationToken cancellationToken)
     {
-        //select * from pokemons where name like '%TEXTO%'
+        //select * from pokemons where name like '%TEXTO%' LIMIT 1
         var pokemon = await _context.Pokemons.AsNoTracking().FirstOrDefaultAsync(s => s.Name.Contains(name));
         return pokemon.ToModel();
     }
