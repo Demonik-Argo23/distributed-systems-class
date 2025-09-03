@@ -1,15 +1,60 @@
 using PokemonApi.Dtos;
+using PokemonApi.Repositories;
+using System.ServiceModel;
+using PokemonApi.Mappers;
+using PokemonApi.Validators;
+using PokemonApi.Models;
+
 
 namespace PokemonApi.Services;
 
 public class PokemonService : IPokemonService
 {
-    public Task<PokemonResponseDto> CreatePokemon(CreatePokemonDto pokemon, CancellationToken cancellationToken)
-    {
-        // Implementation for creating a Pokemon
-        // This would typically involve mapping the CreatePokemonDto to a PokemonEntity,
-        // saving it to the database, and then returning a PokemonResponseDto.
+    private readonly IPokemonRepository _pokemonRepository;
 
-        throw new NotImplementedException("This method needs to be implemented.");
+    public PokemonService(IPokemonRepository pokemonRepository)
+    {
+        _pokemonRepository = pokemonRepository;
+    }
+
+    public async Task<IList<PokemonResponseDto>> GetPokemonByName(string name, CancellationToken cancellationToken)
+    {
+        var pokemons = await _pokemonRepository.GetPokemonsByNameAsync(name, cancellationToken);
+        return pokemons.ToResponseDto();
+    }
+
+    public async Task<PokemonResponseDto> GetPokemonById(Guid id, CancellationToken cancellationToken)
+    {
+        var pokemon = await _pokemonRepository.GetPokemonByIdAsync(id, cancellationToken);
+        return PokemonExists(pokemon) ? pokemon.ToResponseDto() : throw new FaultException("Pokemon not found");
+
+    }
+    public async Task<PokemonResponseDto> CreatePokemon(CreatePokemonDto pokemonRequest, CancellationToken cancellationToken)
+    {
+        //Fluent Methods
+        pokemonRequest
+            .ValidateName()
+            .ValidateType()
+            .ValidateLevel();
+
+        if (await IsPokemonDuplicated(pokemonRequest.Name, cancellationToken))
+        {
+            throw new FaultException("Pokemon already exists");
+        }
+
+        var pokemon = await _pokemonRepository.CreateAsync(pokemonRequest.ToModel(), cancellationToken);
+
+        return pokemon.ToResponseDto();
+    }
+
+    private static bool PokemonExists(Pokemon? pokemon)
+    {
+        return pokemon is not null;
+    }
+
+    private async Task<bool> IsPokemonDuplicated(string name, CancellationToken cancellationToken)
+    {
+        var pokemon = await _pokemonRepository.GetByNameAsync(name, cancellationToken);
+        return pokemon is not null;
     }
 }
