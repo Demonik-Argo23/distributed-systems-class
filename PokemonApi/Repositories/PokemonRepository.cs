@@ -14,6 +14,20 @@ public class PokemonRepository : IPokemonRepository
         _context = context;
 
     }
+    
+    public async Task UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
+    {
+        //UPDATE Pokemons SET Name = 'name', Type = 'type', Attack = 10, Defense = 10, Speed = 10, Hp = 10 WHERE Id = 'id';
+        _context.Pokemons.Update(pokemon.ToEntity());
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeletePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
+    {
+        //DELETE * FROM Pokemons WHERE Id = 'id';
+        _context.Pokemons.Remove(pokemon.ToEntity());
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<Pokemon>> GetPokemonsByNameAsync(string name, CancellationToken cancellationToken)
     {
