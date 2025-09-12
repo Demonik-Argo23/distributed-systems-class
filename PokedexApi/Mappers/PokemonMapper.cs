@@ -17,10 +17,10 @@ public static class PokemonMapper
             Level = pokemonResponseDto.Level,
             Stats = new Stats
             {
+                HP = pokemonResponseDto.Stats.Hp,
                 Attack = pokemonResponseDto.Stats.Attack,
                 Defense = pokemonResponseDto.Stats.Defense,
-                Speed = pokemonResponseDto.Stats.Speed,
-                HP = pokemonResponseDto.Stats.Hp
+                Speed = pokemonResponseDto.Stats.Speed
             }
         };
     }
@@ -31,6 +31,45 @@ public static class PokemonMapper
             Id = pokemon.Id,
             Name = pokemon.Name,
             Attack = pokemon.Stats.Attack
+        };
+    }
+
+    public static IList<Pokemon> ToModel(this IList<PokemonResponseDto> pokemonResponseDtos)
+    {
+        return pokemonResponseDtos.Select(pokemon => pokemon.ToModel()).ToList();
+    }
+
+    public static Pokemon ToModel(this CreatePokemonRequest createPokemonRequest)
+    {
+        return new Pokemon
+        {
+            Name = createPokemonRequest.Name,
+            Type = createPokemonRequest.Type,
+            Level = createPokemonRequest.Level,
+            Stats = new Stats
+            {
+                HP = createPokemonRequest.Stats.HP,
+                Attack = createPokemonRequest.Stats.Attack,
+                Defense = createPokemonRequest.Stats.Defense,
+                Speed = createPokemonRequest.Stats.Speed
+            }
+        };
+    }
+
+    public static CreatePokemonDto ToRequest(this Pokemon pokemon)
+    {
+        return new CreatePokemonDto
+        {
+            Name = pokemon.Name,
+            Type = pokemon.Type,
+            Level = pokemon.Level,
+            Stats = new StatsDto
+            {
+                Hp = pokemon.Stats.HP,
+                Attack = pokemon.Stats.Attack,
+                Defense = pokemon.Stats.Defense,
+                Speed = pokemon.Stats.Speed
+            }
         };
     }
 }
