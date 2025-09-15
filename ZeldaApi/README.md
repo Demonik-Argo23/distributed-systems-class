@@ -45,13 +45,6 @@ docker-compose ps
 ### 3. Verificar funcionamiento
 - **WSDL**: http://localhost:8081/ws/weapons.wsdl
 
-## Pruebas con Insomnia
-
-### Importar WSDL:
-1. Ve a **Application → Preferences → Data**
-2. **Import Data** → **From URL**
-3. Pegar: `http://localhost:8081/ws/weapons.wsdl`
-4. Esto importará automáticamente las 3 operaciones
 
 ### Enums disponibles para valores de las armas:
 - **WeaponType**: Bat, Boomerang, Club, Hammer, Rod, Spear, OneHandedSword, TwoHandedSword, Other
