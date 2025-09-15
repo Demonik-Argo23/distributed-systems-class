@@ -29,7 +29,7 @@ API SOAP para gestionar armas de *The Legend of Zelda: Breath of the Wild* desar
 
 ### 1. Clonar el repositorio
 ```bash
-git clone -b feature/ZeldaWeaponsApi <https://github.com/Demonik-Argo23/distributed-systems-class.git>
+git clone -b feature/Zelda-Api https://github.com/Demonik-Argo23/distributed-systems-class.git
 cd ZeldaApi
 ```
 
