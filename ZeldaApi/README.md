@@ -29,7 +29,7 @@ API SOAP para gestionar armas de *The Legend of Zelda: Breath of the Wild* desar
 
 ### 1. Clonar el repositorio
 ```bash
-git clone <https://github.com/Demonik-Argo23/distributed-systems-class.git>
+git clone <repository-url>
 cd ZeldaApi
 ```
 
@@ -40,6 +40,12 @@ docker-compose up -d
 
 # Verificar que los servicios están corriendo
 docker-compose ps
+```
+
+### (Opcional) Regenerar clases JAXB para desarrollo
+```bash
+# Solo si modificas weapons.xsd
+docker run --rm -v "$(pwd):/workspace" -w /workspace eclipse-temurin:17-jdk-alpine sh -c "apk add --no-cache maven && mvn jaxb2:xjc"
 ```
 
 ### 3. Verificar funcionamiento
