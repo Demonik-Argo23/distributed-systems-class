@@ -6,6 +6,16 @@ namespace WarframeApi.Mappers;
 
 public static class WarframeMapper
 {
+    public static IList<WarframeResponseDto> ToResponseDto(this IReadOnlyList<Warframe> warframes)
+    {
+        return warframes.Select(s => s.ToResponseDto()).ToList();
+    }
+
+    public static IReadOnlyList<Warframe> ToModel(this IReadOnlyList<WarframeEntity> warframes)
+    {
+        return warframes.Select(s => s.ToModel()).ToList();
+    }
+
     public static Warframe ToModel(this WarframeEntity warframeEntity)
     {
         if (warframeEntity is null)

@@ -14,6 +14,32 @@ public class WarframeRepository : IWarframeRepository
         _context = context;
     }
 
+    public async Task<Warframe> GetWFByNameAsync(string name, CancellationToken cancellationToken)
+    {
+        var warframe = await _context.Warframes.AsNoTracking().FirstOrDefaultAsync(s => s.Name.Contains(name));
+        return warframe.ToModel();
+    }
+
+    public async Task<IReadOnlyList<Warframe>> GetWarframesByRankAsync(int rank, CancellationToken cancellationToken)
+    {
+        var Warframes = await _context.Warframes.AsNoTracking()
+        .Where(s => s.Rank.Equals(rank)).ToListAsync(cancellationToken);
+        return Warframes.ToModel();
+    }
+
+    public async Task<IReadOnlyList<Warframe>> GetWarframesByNameAsync(string name, CancellationToken cancellationToken)
+    {
+        var Warframes = await _context.Warframes.AsNoTracking()
+        .Where(s => s.Name.Contains(name)).ToListAsync(cancellationToken);
+        return Warframes.ToModel();
+    }
+
+    public async Task UpdateWarframeAsync(Warframe warframe, CancellationToken cancellationToken)
+    {
+        _context.Warframes.Update(warframe.ToEntity());
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task DeleteWarframeAsync(Warframe Warframe, CancellationToken cancellationToken)
     {
         _context.Warframes.Remove(Warframe.ToEntity());
