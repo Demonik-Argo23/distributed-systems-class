@@ -1,0 +1,7 @@
+@CodexApi_HostAddress = http://localhost:8082
+
+### Get Warframe by ID
+GET {{CodexApi_HostAddress}}/api/v1/warframes/dcb7754d-9e0b-4dc9-a42e-0382aded6ce4
+Accept: application/json
+
+###
