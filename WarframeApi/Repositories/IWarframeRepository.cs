@@ -19,6 +19,5 @@ public interface IWarframeRepository
 
     Task<IReadOnlyList<Warframe>> GetWarframesByRankAsync(int rank, CancellationToken cancellationToken);
 
-    Task DeleteWarframeAsync(Warframe warframe, CancellationToken cancellationToken);
 
 }
