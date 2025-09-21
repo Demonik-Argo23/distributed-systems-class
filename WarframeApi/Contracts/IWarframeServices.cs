@@ -9,6 +9,8 @@ public interface IWarframeService
     [OperationContract]
     Task<WarframeResponseDto> CreateWarframe(CreateWarframeDto Warframe, CancellationToken cancellationToken);
 
+    [OperationContract]
+    Task<WarframeResponseDto> GetWarframeById(Guid id, CancellationToken cancellationToken);
 
     [OperationContract]
     Task<DeleteWarframeResponseDto> DeleteWarframe(Guid id, CancellationToken cancellationToken);
@@ -21,4 +23,5 @@ public interface IWarframeService
 
     [OperationContract]
     Task<List<WarframeResponseDto>> GetWarframeByRank(int rank, CancellationToken cancellationToken);
+
 }
