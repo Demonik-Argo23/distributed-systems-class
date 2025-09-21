@@ -35,6 +35,10 @@ public class WarframeService : IWarframeService
         {
             throw new FaultException($"No Warframe with {warframeToUpdate.Id} ID found.");
         }
+        if (!await IsUpdatable(warframeToUpdate, cancellationToken))
+        {
+            throw new FaultException($"Another Warframe with name {warframeToUpdate.Name} already exists.");
+        }
 
         warframe.Name = warframeToUpdate.Name;
         warframe.Rank = warframeToUpdate.Rank;
