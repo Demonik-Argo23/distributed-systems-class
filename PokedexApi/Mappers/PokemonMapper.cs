@@ -30,8 +30,14 @@ public static class PokemonMapper
         {
             Id = pokemon.Id,
             Name = pokemon.Name,
+            Type = pokemon.Type,
             Attack = pokemon.Stats.Attack
         };
+    }
+
+    public static IList<PokemonResponse> ToResponse(this IList<Pokemon> pokemons)
+    {
+        return pokemons.Select(pokemon => pokemon.ToResponse()).ToList();
     }
 
     public static IList<Pokemon> ToModel(this IList<PokemonResponseDto> pokemonResponseDtos)
