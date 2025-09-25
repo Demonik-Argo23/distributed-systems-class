@@ -31,6 +31,22 @@ public class PokemonsController : ControllerBase
         return pokemon is null ? NotFound() : Ok(pokemon.ToResponse());
     }
 
+    //localhost:PORT/api/v1/pokemons?name=pikachu&type=fire
+    //HTTP STATUS - GET
+    // 200 OK (Si existe o no pokemon (se regresa listado vacio))
+    // 400 Bad Request (Si los parametros son invalidos)
+    // 500 Internal Server Error (Error del servidor)
+    [HttpGet]
+    public async Task<ActionResult<IList<PokemonResponse>>> GetPokemonsAsync([FromQuery] string name, [FromQuery] string type, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(type))
+        {
+            return BadRequest(new { Message = "Type query parameter is required" });
+        }
+        var pokemons = await _pokemonService.GetPokemonsAsync(name, type, cancellationToken);
+        return Ok(pokemons.ToResponse());
+    }
+
     //Http Verb - Post
     //Http Status
     // 400 Bad Request (Si usuario manda informacion erronea)
@@ -62,6 +78,27 @@ public class PokemonsController : ControllerBase
             return Conflict(new { Message = e.Message });
         }
     }
+
+    //localhost:PORT/api/v1/pokemons/ID
+    // HTTP Verb - DELETE
+    // HTTP STATUS
+    // 204 No Content (Si se borro correctamente)
+    // 404 Not Found (Si el pokemon no existe) No sigue muy bien las buenas practicas de RESTFul
+    // 500 Internal Server Error (Error del servidor)
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeletePokemonAsync(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _pokemonService.DeletePokemonAsync(id, cancellationToken);
+            return NoContent(); // 204
+        }
+        catch (PokemonNotFoundException)
+        {
+            return NotFound(); // 404
+        }
+    }
+
     private static bool IsValidAttack(CreatePokemonRequest createPokemon)
     {
         return createPokemon.Stats.Attack > 0;

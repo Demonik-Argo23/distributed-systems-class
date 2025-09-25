@@ -30,6 +30,17 @@ public class PokemonService : IPokemonService
         return await _pokemonGateway.CreatePokemonAsync(pokemon, cancellationToken);
 
     }
+
+    public async Task<IList<Pokemon>> GetPokemonsAsync(string name, string type, CancellationToken cancellationToken)
+    {
+        var pokemons = await _pokemonGateway.GetPokemonByNameAsync(name, cancellationToken);
+        return pokemons.Where(pokemon => pokemon.Type.ToLower().Equals(type.ToLower())).ToList();
+    }
+
+    public async Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await _pokemonGateway.DeletePokemonAsync(id, cancellationToken);
+    }
     
     private static bool PokemonExists(IList<Pokemon> pokemons, string pokemonNameToSearch)
     {

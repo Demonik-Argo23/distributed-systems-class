@@ -34,6 +34,19 @@ public class PokemonGateway : IPokemonGateway
         }
     }
 
+    public async Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _pokemonContract.DeletePokemon(id, cancellationToken);
+        }
+        catch (FaultException ex) when (ex.Message == "Pokemon not found")
+        {
+            _logger.LogWarning(ex, "Pokemon not found");
+            throw new PokemonNotFoundException(id);
+        }
+    }
+
     public async Task<IList<Pokemon>> GetPokemonByNameAsync(string name, CancellationToken cancellationToken)
     {
         var pokemons = await _pokemonContract.GetPokemonByName(name, cancellationToken);
