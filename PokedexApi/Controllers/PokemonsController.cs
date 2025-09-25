@@ -37,14 +37,50 @@ public class PokemonsController : ControllerBase
     // 400 Bad Request (Si los parametros son invalidos)
     // 500 Internal Server Error (Error del servidor)
     [HttpGet]
-    public async Task<ActionResult<IList<PokemonResponse>>> GetPokemonsAsync([FromQuery] string name, [FromQuery] string type, CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<PokemonResponse>>> GetPokemonsAsync(
+        [FromQuery] string? name,
+        [FromQuery] string? type,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] string orderBy = "name",
+        [FromQuery] string orderDirection = "asc",
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(type))
+        // Validar parámetros
+        if (pageSize <= 0 || pageSize > 100)
         {
-            return BadRequest(new { Message = "Type query parameter is required" });
+            return BadRequest(new { Message = "PageSize must be between 1 and 100" });
         }
-        var pokemons = await _pokemonService.GetPokemonsAsync(name, type, cancellationToken);
-        return Ok(pokemons.ToResponse());
+
+        if (pageNumber <= 0)
+        {
+            return BadRequest(new { Message = "PageNumber must be greater than 0" });
+        }
+
+        var validOrderByFields = new[] { "name", "type", "level", "attack" };
+        if (!validOrderByFields.Contains(orderBy.ToLower()))
+        {
+            return BadRequest(new { Message = $"OrderBy must be one of: {string.Join(", ", validOrderByFields)}" });
+        }
+
+        var validOrderDirections = new[] { "asc", "desc" };
+        if (!validOrderDirections.Contains(orderDirection.ToLower()))
+        {
+            return BadRequest(new { Message = "OrderDirection must be 'asc' or 'desc'" });
+        }
+
+        var parameters = new PaginationParameters
+        {
+            Name = name,
+            Type = type,
+            PageSize = pageSize,
+            PageNumber = pageNumber,
+            OrderBy = orderBy,
+            OrderDirection = orderDirection
+        };
+
+        var result = await _pokemonService.GetPokemonsPagedAsync(parameters, cancellationToken);
+        return Ok(result);
     }
 
     //Http Verb - Post

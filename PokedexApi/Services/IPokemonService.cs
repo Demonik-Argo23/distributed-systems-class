@@ -1,4 +1,5 @@
 using PokedexApi.Models;
+using PokedexApi.Dtos;
 
 namespace PokedexApi.Services;
 
@@ -9,6 +10,8 @@ public interface IPokemonService
     Task<Pokemon> CreatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken);
 
     Task<IList<Pokemon>> GetPokemonsAsync(string name, string type, CancellationToken cancellationToken);
+
+    Task<PagedResponse<PokemonResponse>> GetPokemonsPagedAsync(PaginationParameters parameters, CancellationToken cancellationToken);
 
     Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken);
 }
