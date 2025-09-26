@@ -102,4 +102,24 @@ public class PokemonService : IPokemonService
         var pokemon = await _pokemonRepository.GetByNameAsync(name, cancellationToken);
         return pokemon is not null;
     }
+
+    public async Task<PagedPokemonResponseDto> GetPokemonsAsync(GetPokemonsRequestDto request)
+    {
+        var (pokemons, totalRecords) = await _pokemonRepository.GetPokemonsAsync(
+            request.Name,
+            request.Type,
+            request.PageNumber,
+            request.PageSize,
+            request.OrderBy,
+            request.OrderDirection,
+            CancellationToken.None);
+
+        var pokemonList = pokemons?.ToResponseDto().ToList() ?? new List<PokemonResponseDto>();
+
+        return new PagedPokemonResponseDto
+        {
+            Pokemons = pokemonList,
+            TotalRecords = totalRecords
+        };
+    }
 }
