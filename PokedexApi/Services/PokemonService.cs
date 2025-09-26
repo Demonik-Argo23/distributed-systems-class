@@ -41,12 +41,35 @@ public class PokemonService : IPokemonService
     {
         await _pokemonGateway.DeletePokemonAsync(id, cancellationToken);
     }
-    
+
     private static bool PokemonExists(IList<Pokemon> pokemons, string pokemonNameToSearch)
     {
         return pokemons.Any(Pokemon => Pokemon.Name.ToLower().Equals(pokemonNameToSearch.ToLower()));
     }
-}
 
+    public async Task<Pokemon> PatchPokemonAsync(Guid id, string? name, string? type, int? attack, int? defense, int? speed, int? HP, CancellationToken cancellationToken)
+    {
+        var pokemon = await _pokemonGateway.GetPokemonByIdAsync(id, cancellationToken);
+        if (pokemon == null)
+        {
+            throw new PokemonNotFoundException(id);
+        }
+        pokemon.Name = name ?? pokemon.Name;
+        pokemon.Type = type ?? pokemon.Type;
+        pokemon.Stats.Attack = attack ?? pokemon.Stats.Attack;
+        pokemon.Stats.Defense = defense ?? pokemon.Stats.Defense;
+        pokemon.Stats.Speed = speed ?? pokemon.Stats.Speed;
+        pokemon.Stats.HP = HP ?? pokemon.Stats.HP;
+
+        await _pokemonGateway.UpdatePokemonAsync(pokemon, cancellationToken);
+        return pokemon;
+    }
+
+
+    public async Task<Pokemon> UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
+    {
+        return await _pokemonGateway.UpdatePokemonAsync(pokemon, cancellationToken);
+    }
+}
 //Arquitectura (BFF o Experience API o Aggregator Pattern)
 //Cliente (Postman, Insomnia, algun aplicativo WEB) -> Rest API (Pokedex Api) -> PokedexApi (SOAP)

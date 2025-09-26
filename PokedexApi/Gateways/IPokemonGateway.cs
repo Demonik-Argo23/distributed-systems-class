@@ -13,4 +13,5 @@ public interface IPokemonGateway
 
     Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<Pokemon> UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken);
 }
