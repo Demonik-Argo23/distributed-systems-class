@@ -44,20 +44,19 @@ public class PokemonService : IPokemonService
         await _pokemonGateway.DeletePokemonAsync(id, cancellationToken);
     }
 
-    public async Task<PagedResponse<PokemonResponse>> GetPokemonsPagedAsync(PaginationParameters parameters, CancellationToken cancellationToken)
+    public async Task<PagedResponse<PokemonResponse>> GetPokemonsAsync(string name, string type, int pageNumber, int pageSize, string orderBy, string orderDirection, CancellationToken cancellationToken)
     {
-        var pagedPokemons = await _pokemonGateway.GetPokemonsPagedAsync(parameters, cancellationToken);
-        
-        return new PagedResponse<PokemonResponse>
-        {
-            PageNumber = pagedPokemons.PageNumber,
-            PageSize = pagedPokemons.PageSize,
-            TotalRecords = pagedPokemons.TotalRecords,
-            TotalPages = pagedPokemons.TotalPages,
-            Data = pagedPokemons.Data.ToResponse()
-        };
+        var (pokemons, totalRecords) = await _pokemonGateway.GetPokemonsAsync(
+            name,
+            type,
+            pageNumber,
+            pageSize,
+            orderBy,
+            orderDirection,
+            cancellationToken);
+        return PagedResponse<PokemonResponse>.Create(pokemons.ToResponse(), totalRecords, pageNumber, pageSize);
     }
-    
+
     private static bool PokemonExists(IList<Pokemon> pokemons, string pokemonNameToSearch)
     {
         return pokemons.Any(Pokemon => Pokemon.Name.ToLower().Equals(pokemonNameToSearch.ToLower()));

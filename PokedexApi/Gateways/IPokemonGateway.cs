@@ -14,5 +14,12 @@ public interface IPokemonGateway
 
     Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<PagedResponse<Pokemon>> GetPokemonsPagedAsync(PaginationParameters parameters, CancellationToken cancellationToken);
+    Task<(IList<Pokemon> pokemons, int totalRecords)> GetPokemonsAsync(
+        string name,
+        string type,
+        int pageNumber,
+        int pageSize,
+        string orderBy,
+        string orderDirection,
+        CancellationToken cancellationToken);
 }

@@ -40,47 +40,14 @@ public class PokemonsController : ControllerBase
     public async Task<ActionResult<PagedResponse<PokemonResponse>>> GetPokemonsAsync(
         [FromQuery] string? name,
         [FromQuery] string? type,
-        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] string orderBy = "name",
-        [FromQuery] string orderDirection = "asc",
-        CancellationToken cancellationToken = default)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string orderBy = "Name",
+        [FromQuery] string orderDirection = "asc")
     {
-        // Validar parámetros
-        if (pageSize <= 0 || pageSize > 100)
-        {
-            return BadRequest(new { Message = "PageSize must be between 1 and 100" });
-        }
-
-        if (pageNumber <= 0)
-        {
-            return BadRequest(new { Message = "PageNumber must be greater than 0" });
-        }
-
-        var validOrderByFields = new[] { "name", "type", "level", "attack" };
-        if (!validOrderByFields.Contains(orderBy.ToLower()))
-        {
-            return BadRequest(new { Message = $"OrderBy must be one of: {string.Join(", ", validOrderByFields)}" });
-        }
-
-        var validOrderDirections = new[] { "asc", "desc" };
-        if (!validOrderDirections.Contains(orderDirection.ToLower()))
-        {
-            return BadRequest(new { Message = "OrderDirection must be 'asc' or 'desc'" });
-        }
-
-        var parameters = new PaginationParameters
-        {
-            Name = name,
-            Type = type,
-            PageSize = pageSize,
-            PageNumber = pageNumber,
-            OrderBy = orderBy,
-            OrderDirection = orderDirection
-        };
-
-        var result = await _pokemonService.GetPokemonsPagedAsync(parameters, cancellationToken);
-        return Ok(result);
+        var pokemons = await _pokemonService.GetPokemonsAsync(name, type, pageNumber, pageSize, orderBy, orderDirection, cancellationToken);
+        return Ok(pokemons);
     }
 
     //Http Verb - Post

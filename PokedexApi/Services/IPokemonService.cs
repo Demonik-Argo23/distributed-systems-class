@@ -11,7 +11,13 @@ public interface IPokemonService
 
     Task<IList<Pokemon>> GetPokemonsAsync(string name, string type, CancellationToken cancellationToken);
 
-    Task<PagedResponse<PokemonResponse>> GetPokemonsPagedAsync(PaginationParameters parameters, CancellationToken cancellationToken);
-
+    Task<PagedResponse<PokemonResponse>> GetPokemonsAsync(
+        string name,
+        string type,
+        int pageNumber,
+        int pageSize,
+        string orderBy,
+        string orderDirection,
+        CancellationToken cancellationToken);
     Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken);
 }

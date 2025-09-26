@@ -70,48 +70,24 @@ public class PokemonGateway : IPokemonGateway
         }
     }
 
-    public async Task<PagedResponse<Pokemon>> GetPokemonsPagedAsync(PaginationParameters parameters, CancellationToken cancellationToken)
+    public async Task<(IList<Pokemon> pokemons, int totalRecords)> GetPokemonsAsync(string name, string type, int pageNumber, int pageSize, string orderBy, string orderDirection, CancellationToken cancellationToken)
     {
-        var allPokemons = await _pokemonContract.GetPokemonByName(parameters.Name ?? "", cancellationToken);
-        var pokemonList = allPokemons.ToModel().ToList();
-        
-        if (!string.IsNullOrEmpty(parameters.Type))
+
+        var request = new GetPokemonsRequestDto
         {
-            pokemonList = pokemonList.Where(p => p.Type.ToLower().Contains(parameters.Type.ToLower())).ToList();
-        }
-
-        pokemonList = ApplyOrdering(pokemonList, parameters.OrderBy, parameters.OrderDirection);
-
-        var totalRecords = pokemonList.Count;
-        var totalPages = (int)Math.Ceiling((double)totalRecords / parameters.PageSize);
-        //función ceiling para redondear hacia arriba
-        
-        var pagedPokemons = pokemonList
-            .Skip((parameters.PageNumber - 1) * parameters.PageSize)
-            .Take(parameters.PageSize)
-            .ToList();
-
-        return new PagedResponse<Pokemon>
-        {
-            PageNumber = parameters.PageNumber,
-            PageSize = parameters.PageSize,
-            TotalRecords = totalRecords,
-            TotalPages = totalPages,
-            Data = pagedPokemons
+            Name = name,
+            Type = type,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            OrderBy = orderBy,
+            OrderDirection = orderDirection
         };
+
+        var response = await _pokemonContract.GetPokemonsAsync(request);
+
+
+        var pokemons = response.Pokemons.ToModel();
+        return (pokemons, response.TotalRecords);
     }
 
-    private List<Pokemon> ApplyOrdering(List<Pokemon> pokemons, string orderBy, string orderDirection)
-    {
-        var isDescending = orderDirection.ToLower() == "desc";
-        
-        return orderBy.ToLower() switch
-        {
-            "name" => isDescending ? pokemons.OrderByDescending(p => p.Name).ToList() : pokemons.OrderBy(p => p.Name).ToList(),
-            "type" => isDescending ? pokemons.OrderByDescending(p => p.Type).ToList() : pokemons.OrderBy(p => p.Type).ToList(),
-            "level" => isDescending ? pokemons.OrderByDescending(p => p.Level).ToList() : pokemons.OrderBy(p => p.Level).ToList(),
-            "attack" => isDescending ? pokemons.OrderByDescending(p => p.Stats.Attack).ToList() : pokemons.OrderBy(p => p.Stats.Attack).ToList(),
-            _ => pokemons.OrderBy(p => p.Name).ToList()
-        };
-    }
 }
