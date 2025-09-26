@@ -49,7 +49,7 @@ public class PokemonGateway : IPokemonGateway
 
     public async Task<IList<Pokemon>> GetPokemonByNameAsync(string name, CancellationToken cancellationToken)
     {
-        var pokemons = await _pokemonContract.GetPokemonByName(name, cancellationToken);
+        var pokemons = await _pokemonContract.GetPokemonsByName(name, cancellationToken);
         return pokemons.ToModel();
     }
 
@@ -68,4 +68,22 @@ public class PokemonGateway : IPokemonGateway
             throw new Exception("Error creating pokemon", e);
         }
     }
+
+    public async Task<Pokemon> UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var updatedPokemon = await _pokemonContract.UpdatePokemon(pokemon.ToUpdateRequest(), cancellationToken);
+            return updatedPokemon.ToModel();
+        }
+        catch (FaultException ex) when (ex.Message == "Pokemon not found")
+        {
+            throw new PokemonNotFoundException(pokemon.Id);
+        }
+        catch (FaultException e) when (e.Message.Contains("already exists"))
+        {
+            throw new PokemonAlreadyExistsException(pokemon.Name);
+        }
+    }
+
 }
