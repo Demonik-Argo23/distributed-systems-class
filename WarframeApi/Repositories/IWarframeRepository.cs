@@ -19,5 +19,7 @@ public interface IWarframeRepository
 
     Task<IReadOnlyList<Warframe>> GetWarframesByRankAsync(int rank, CancellationToken cancellationToken);
 
+    Task<(IReadOnlyList<Warframe> Items, int TotalCount)> GetWarframesByNamePagedAsync(string name, int pageNumber, int pageSize, CancellationToken cancellationToken);
+
 
 }

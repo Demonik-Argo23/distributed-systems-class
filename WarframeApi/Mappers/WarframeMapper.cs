@@ -20,14 +20,14 @@ public static class WarframeMapper
     {
         if (warframeEntity is null)
         {
-            return null;
+            throw new ArgumentNullException(nameof(warframeEntity), "WarframeEntity cannot be null");
         }
 
         return new Warframe
         {
             Id = warframeEntity.Id,
-            Name = warframeEntity.Name,
-            Rol = warframeEntity.Rol,
+            Name = warframeEntity.Name ?? string.Empty,
+            Rol = warframeEntity.Rol ?? string.Empty,
             Rank = warframeEntity.Rank,
             Stats = new Stats
             {
@@ -43,14 +43,19 @@ public static class WarframeMapper
     {
         if (warframe is null)
         {
-            return null;
+            throw new ArgumentNullException(nameof(warframe), "Warframe cannot be null");
+        }
+
+        if (warframe.Stats is null)
+        {
+            throw new ArgumentException("Warframe Stats cannot be null", nameof(warframe));
         }
 
         return new WarframeEntity
         {
             Id = warframe.Id,
-            Name = warframe.Name,
-            Rol = warframe.Rol,
+            Name = warframe.Name ?? string.Empty,
+            Rol = warframe.Rol ?? string.Empty,
             Rank = warframe.Rank,
             Hp = warframe.Stats.Hp,
             Shield = warframe.Stats.Shield,
@@ -63,14 +68,19 @@ public static class WarframeMapper
     {
         if (createWarframeDto is null)
         {
-            return null;
+            throw new ArgumentNullException(nameof(createWarframeDto), "CreateWarframeDto cannot be null");
+        }
+
+        if (createWarframeDto.Stats is null)
+        {
+            throw new ArgumentException("CreateWarframeDto Stats cannot be null", nameof(createWarframeDto));
         }
 
         return new Warframe
         {
             Id = Guid.NewGuid(),
-            Name = createWarframeDto.Name,
-            Rol = createWarframeDto.Rol,
+            Name = createWarframeDto.Name ?? string.Empty,
+            Rol = createWarframeDto.Rol ?? string.Empty,
             Rank = createWarframeDto.Rank,
             Stats = new Stats
             {
@@ -86,14 +96,19 @@ public static class WarframeMapper
     {
         if (warframe is null)
         {
-            return null;
+            throw new ArgumentNullException(nameof(warframe), "Warframe cannot be null");
+        }
+
+        if (warframe.Stats is null)
+        {
+            throw new ArgumentException("Warframe Stats cannot be null", nameof(warframe));
         }
 
         return new WarframeResponseDto
         {
             Id = warframe.Id,
-            Name = warframe.Name,
-            Rol = warframe.Rol,
+            Name = warframe.Name ?? string.Empty,
+            Rol = warframe.Rol ?? string.Empty,
             Rank = warframe.Rank,
             Hp = warframe.Stats.Hp,
             Shield = warframe.Stats.Shield,

@@ -16,7 +16,11 @@ public class WarframeRepository : IWarframeRepository
 
     public async Task<Warframe> GetWFByNameAsync(string name, CancellationToken cancellationToken)
     {
-        var warframe = await _context.Warframes.AsNoTracking().FirstOrDefaultAsync(s => s.Name.Contains(name));
+        var warframe = await _context.Warframes.AsNoTracking().FirstOrDefaultAsync(s => s.Name.Contains(name), cancellationToken);
+        if (warframe == null)
+        {
+            return null!;
+        }
         return warframe.ToModel();
     }
 
@@ -49,7 +53,11 @@ public class WarframeRepository : IWarframeRepository
     public async Task<Warframe> GetWarframesByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var warframeEntity = await _context.Warframes.AsNoTracking().FirstOrDefaultAsync(w => w.Id == id, cancellationToken);
-        return warframeEntity?.ToModel();
+        if (warframeEntity == null)
+        {
+            return null!;
+        }
+        return warframeEntity.ToModel();
     }
 
     public async Task<Warframe> CreateAsync(Warframe warframe, CancellationToken cancellationToken)
@@ -62,5 +70,20 @@ public class WarframeRepository : IWarframeRepository
 
         // entidad a modelo
         return warframeEntity.ToModel();
+    }
+
+    public async Task<(IReadOnlyList<Warframe> Items, int TotalCount)> GetWarframesByNamePagedAsync(string name, int pageNumber, int pageSize, CancellationToken cancellationToken)
+    {
+        var query = _context.Warframes.AsNoTracking()
+            .Where(s => s.Name.Contains(name));
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items.ToModel(), totalCount);
     }
 }
