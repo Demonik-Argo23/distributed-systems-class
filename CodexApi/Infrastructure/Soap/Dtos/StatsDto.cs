@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace WarframeApi.Dtos;
+namespace CodexApi.Infrastructure.Soap.Dtos;
 
 [DataContract(Name = "StatsDto", Namespace = "http://Warframe-api/Warframe-service")]
 public class StatsDto
