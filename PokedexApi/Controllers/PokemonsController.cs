@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using PokedexApi.Dtos;
-using PokedexApi.Models;
 using PokedexApi.Services;
 using PokedexApi.Mappers;
 using PokedexApi.Exceptions;
 using Pokedex.Dtos;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 
 namespace PokedexApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/[controller]")]
 public class PokemonsController : ControllerBase
 {
@@ -25,7 +27,9 @@ public class PokemonsController : ControllerBase
     // 500 Internal Server Error (Error del servidor)
 
     //Http Verb -Get
-    [HttpGet("{id}", Name = "GetPokemonByIdAsync")] // api/v1/pokemons/{id}
+    [HttpGet("{id}", Name = "GetPokemonByIdAsync")] // api/v1/pokemons/{id}}
+    [Authorize(Policy = "Read")]
+
     public async Task<ActionResult<PokemonResponse>> GetPokemonByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var pokemon = await _pokemonService.GetPokemonByIdAsync(id, cancellationToken);
@@ -38,6 +42,8 @@ public class PokemonsController : ControllerBase
     // 400 Bad Request (Si los parametros son invalidos)
     // 500 Internal Server Error (Error del servidor)
     [HttpGet]
+    [Authorize(Policy = "Read")]
+
     public async Task<ActionResult<IList<PokemonResponse>>> GetPokemonsAsync([FromQuery] string name, [FromQuery] string type, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(type))
@@ -59,6 +65,7 @@ public class PokemonsController : ControllerBase
     // 202 Accepted (Si la creacion del recurso es asincrona y toma tiempo)
 
     [HttpPost]
+    [Authorize(Policy = "Write")]
     public async Task<ActionResult<PokemonResponse>> CreatePokemonAsync([FromBody] CreatePokemonRequest createPokemon, CancellationToken cancellationToken)
     {
         try
@@ -87,6 +94,8 @@ public class PokemonsController : ControllerBase
     // 404 Not Found (Si el pokemon no existe) No sigue muy bien las buenas practicas de RESTFul
     // 500 Internal Server Error (Error del servidor)
     [HttpDelete("{id}")]
+    [Authorize(Policy = "Write")]
+
     public async Task<ActionResult> DeletePokemonAsync(Guid id, CancellationToken cancellationToken)
     {
         try
@@ -115,7 +124,9 @@ public class PokemonsController : ControllerBase
     // 500 Internal Server Error (Error del servidor)
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdatePokemonAsync(Guid id, [FromBody] UpdatePokemonRequest pokemon ,CancellationToken cancellationToken)
+    [Authorize(Policy = "Write")]
+
+    public async Task<IActionResult> UpdatePokemonAsync(Guid id, [FromBody] UpdatePokemonRequest pokemon, CancellationToken cancellationToken)
     {
         try
         {
@@ -123,7 +134,7 @@ public class PokemonsController : ControllerBase
             {
                 return BadRequest(new { Message = "Attack does not have a valid value" });
             }
-            
+
             await _pokemonService.UpdatePokemonAsync(pokemon.ToModel(id), cancellationToken);
             return NoContent(); //204
         }
@@ -147,6 +158,8 @@ public class PokemonsController : ControllerBase
     // 409 Conflict (Si el pokemon ya existe)
 
     [HttpPatch("{id}")]
+    [Authorize(Policy = "Write")]
+
     public async Task<ActionResult> PatchPokemonAsync(Guid id, [FromBody] PatchPokemonRequest pokemonRequest, CancellationToken cancellationToken)
     {
         try
