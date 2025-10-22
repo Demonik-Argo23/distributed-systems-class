@@ -22,4 +22,5 @@ public interface IPokemonGateway
         string orderBy,
         string orderDirection,
         CancellationToken cancellationToken);
+    Task<Pokemon> UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken);
 }

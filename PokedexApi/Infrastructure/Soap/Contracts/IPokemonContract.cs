@@ -21,4 +21,11 @@ public interface IPokemonContract
     [OperationContract]
     Task<PagedPokemonResponseDto> GetPokemonsAsync(GetPokemonsRequestDto request);
 
+    Task<IList<PokemonResponseDto>> GetPokemonsByName(string name, CancellationToken cancellationToken);
+
+    [OperationContract]
+    Task<DeletePokemonResponseDto> DeletePokemon(Guid id, CancellationToken cancellationToken);
+
+    [OperationContract]
+    Task<PokemonResponseDto> UpdatePokemon(UpdatePokemonDto pokemon, CancellationToken cancellationToken);
 }

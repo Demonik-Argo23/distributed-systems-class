@@ -20,4 +20,14 @@ public interface IPokemonService
         string orderDirection,
         CancellationToken cancellationToken);
     Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken);
+    Task<Pokemon> UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken);
+
+    Task<Pokemon> PatchPokemonAsync(
+        Guid id,
+        string? name,
+        string? type,
+        int? attack,
+        int? defense,
+        int? speed,
+        int? HP, CancellationToken cancellationToken);
 }
