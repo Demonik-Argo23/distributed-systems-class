@@ -1,13 +1,13 @@
 using System.Runtime.Serialization;
 
-namespace WarframeApi.Dtos;
+namespace CodexApi.Infrastructure.Soap.Dtos;
 
 [DataContract(Name = "DeleteWarframeResponse", Namespace = "http://Warframe-api/Warframe-service")]
 public class DeleteWarframeResponseDto
 {
-    [DataMember(Name = "Success", Order = 1)]
+    [DataMember(Order = 1)]
     public bool Success { get; set; }
     
-    [DataMember(Name = "Message", Order = 2)]
+    [DataMember(Order = 2)]
     public string Message { get; set; } = string.Empty;
 }

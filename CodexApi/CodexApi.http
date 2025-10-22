@@ -1,7 +1,53 @@
 @CodexApi_HostAddress = http://localhost:8082
 
 ### Get Warframe by ID
-GET {{CodexApi_HostAddress}}/api/v1/warframes/dcb7754d-9e0b-4dc9-a42e-0382aded6ce4
+GET {{CodexApi_HostAddress}}/api/v1/warframes/{id}
 Accept: application/json
 
-###
+### Create a new Warframe
+POST {{CodexApi_HostAddress}}/api/v1/warframes
+Content-Type: application/json
+
+{
+  "name": "Excalibur",
+  "rol": "Balanced",
+  "rank": 30,
+  "stats": {
+    "hp": 300,
+    "shield": 225,
+    "armor": 225,
+    "energy": 150
+  }
+}
+
+### Update a Warframe (PUT)
+PUT {{CodexApi_HostAddress}}/api/v1/warframes/{id}
+Content-Type: application/json
+
+{
+  "name": "Excalibur Prime",
+  "rol": "Balanced",
+  "rank": 30,
+  "stats": {
+    "hp": 350,
+    "shield": 275,
+    "armor": 275,
+    "energy": 200
+  }
+}
+
+### Partially update a Warframe (PATCH)
+PATCH {{CodexApi_HostAddress}}/api/v1/warframes/{id}
+Content-Type: application/json
+
+{
+  "name": "Excalibur Umbra",
+  "stats": {
+    "hp": 400
+  }
+}
+
+### Delete a Warframe
+DELETE {{CodexApi_HostAddress}}/api/v1/warframes/{id}
+
+docker run --name codex-api -d -p 8082:8080 codex-api:3
