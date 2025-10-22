@@ -1,0 +1,54 @@
+using Google.Protobuf.WellKnownTypes;
+using TrainerApi.Infrastructure.Documents;
+using TrainerApi.Models;
+
+namespace TrainerApi.Mappers;
+
+public static class TrainerMapper
+{
+    public static Trainer ToDomain(this TrainerDocument document)
+    {
+        return new Trainer
+        {
+            Id = document.Id,
+            Name = document.Name,
+            Age = document.Age,
+            Birthdate = document.Birthdate,
+            CreatedAt = document.CreatedAt,
+            Medals = document.Medals.Select(m => m.ToDomain()).ToList()
+        };
+    }
+
+    public static Models.Medal ToDomain(this MedalDocument document)
+    {
+        return new Models.Medal
+        {
+            Region = document.Region,
+            Type = (Models.MedalType)(int)document.Type
+        };
+    }
+
+    public static TrainerResponse ToResponse(this Trainer trainer)
+    {
+        return new TrainerResponse
+        {
+            Id = trainer.Id,
+            Name = trainer.Name,
+            Age = trainer.Age,
+            Birthday = Timestamp.FromDateTime(trainer.Birthdate.ToUniversalTime()),
+            CreatedAt = Timestamp.FromDateTime(trainer.CreatedAt.ToUniversalTime()),
+            Medals = { trainer.Medals.Select(m => m.ToResponse()) }
+        };
+    }
+
+    public static Medal ToResponse(this Models.Medal medal)
+    {
+        return new Medal
+        {
+            Region = medal.Region,
+            Type = (MedalType)(int)medal.Type
+        };
+    }
+}
+
+
