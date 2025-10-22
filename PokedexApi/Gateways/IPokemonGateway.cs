@@ -1,4 +1,5 @@
 using PokedexApi.Models;
+using PokedexApi.Dtos;
 
 namespace PokedexApi.Gateways;
 //Como si fuera un repositorio pero para un servicio externo
@@ -13,5 +14,13 @@ public interface IPokemonGateway
 
     Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<(IList<Pokemon> pokemons, int totalRecords)> GetPokemonsAsync(
+        string name,
+        string type,
+        int pageNumber,
+        int pageSize,
+        string orderBy,
+        string orderDirection,
+        CancellationToken cancellationToken);
     Task<Pokemon> UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken);
 }
