@@ -38,14 +38,17 @@ public class PokemonsController : ControllerBase
     // 400 Bad Request (Si los parametros son invalidos)
     // 500 Internal Server Error (Error del servidor)
     [HttpGet]
-    public async Task<ActionResult<IList<PokemonResponse>>> GetPokemonsAsync([FromQuery] string name, [FromQuery] string type, CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<PokemonResponse>>> GetPokemonsAsync(
+        [FromQuery] string? name,
+        [FromQuery] string? type,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string orderBy = "Name",
+        [FromQuery] string orderDirection = "asc")
     {
-        if (string.IsNullOrEmpty(type))
-        {
-            return BadRequest(new { Message = "Type query parameter is required" });
-        }
-        var pokemons = await _pokemonService.GetPokemonsAsync(name, type, cancellationToken);
-        return Ok(pokemons.ToResponse());
+        var pokemons = await _pokemonService.GetPokemonsAsync(name, type, pageNumber, pageSize, orderBy, orderDirection, cancellationToken);
+        return Ok(pokemons);
     }
 
     //Http Verb - Post

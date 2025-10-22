@@ -14,7 +14,7 @@ public class PokemonRepository : IPokemonRepository
         _context = context;
 
     }
-    
+
     public async Task UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
     {
         //UPDATE Pokemons SET Name = 'name', Type = 'type', Attack = 10, Defense = 10, Speed = 10, Hp = 10 WHERE Id = 'id';
@@ -59,5 +59,38 @@ public class PokemonRepository : IPokemonRepository
         await _context.SaveChangesAsync(cancellationToken);
 
         return pokemonToCreate.ToModel();
+    }
+
+    public async Task<(IReadOnlyList<Pokemon> data, int totalRecords)> GetPokemonsAsync(string name, string type, int pageNumber, int pageSize, string orderBy, string orderDirection, CancellationToken cancellationToken)
+    {
+        var query = _context.Pokemons.AsNoTracking();
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            query = query.Where(s => s.Name.Contains(name));
+        }
+
+        if (!string.IsNullOrEmpty(type))
+        {
+            query = query.Where(s => s.Type != null && s.Type.ToLower().Contains(type.ToLower()));
+        }
+
+        var totalRecords = await query.CountAsync(cancellationToken);
+
+        var isDescending = orderDirection.Equals("desc", StringComparison.OrdinalIgnoreCase);
+        query = orderBy.ToLower() switch
+        {
+            "name" => isDescending ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
+            "type" => isDescending ? query.OrderByDescending(p => p.Type) : query.OrderBy(p => p.Type),
+            "attack" => isDescending ? query.OrderByDescending(p => p.Attack) : query.OrderBy(p => p.Attack), // Usa la propiedad de la entidad!
+            _ => query.OrderBy(p => p.Name),
+        };
+
+        var pokemons = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (pokemons.ToModel(), totalRecords);
     }
 }

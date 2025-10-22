@@ -1,6 +1,8 @@
 using PokedexApi.Exceptions;
 using PokedexApi.Gateways;
 using PokedexApi.Models;
+using PokedexApi.Dtos;
+using PokedexApi.Mappers;
 
 namespace PokedexApi.Services;
 
@@ -40,6 +42,19 @@ public class PokemonService : IPokemonService
     public async Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken)
     {
         await _pokemonGateway.DeletePokemonAsync(id, cancellationToken);
+    }
+
+    public async Task<PagedResponse<PokemonResponse>> GetPokemonsAsync(string name, string type, int pageNumber, int pageSize, string orderBy, string orderDirection, CancellationToken cancellationToken)
+    {
+        var (pokemons, totalRecords) = await _pokemonGateway.GetPokemonsAsync(
+            name,
+            type,
+            pageNumber,
+            pageSize,
+            orderBy,
+            orderDirection,
+            cancellationToken);
+        return PagedResponse<PokemonResponse>.Create(pokemons.ToResponse(), totalRecords, pageNumber, pageSize);
     }
 
     private static bool PokemonExists(IList<Pokemon> pokemons, string pokemonNameToSearch)

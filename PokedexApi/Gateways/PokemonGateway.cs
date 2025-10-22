@@ -4,6 +4,7 @@ using PokedexApi.Models;
 using PokedexApi.Mappers;
 using PokedexApi.Exceptions;
 using PokedexApi.Infrastructure.Soap.Dtos;
+using PokedexApi.Dtos;
 using System.ServiceModel.Channels;
 
 namespace PokedexApi.Gateways;
@@ -30,7 +31,7 @@ public class PokemonGateway : IPokemonGateway
         catch (FaultException ex) when (ex.Message == "Pokemon not found")
         {
             _logger.LogWarning(ex, "Pokemon not found");
-            return null;
+            throw new PokemonNotFoundException(id);
         }
     }
 
@@ -69,6 +70,24 @@ public class PokemonGateway : IPokemonGateway
         }
     }
 
+    public async Task<(IList<Pokemon> pokemons, int totalRecords)> GetPokemonsAsync(string name, string type, int pageNumber, int pageSize, string orderBy, string orderDirection, CancellationToken cancellationToken)
+    {
+
+        var request = new GetPokemonsRequestDto
+        {
+            Name = name,
+            Type = type,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            OrderBy = orderBy,
+            OrderDirection = orderDirection
+        };
+
+        var response = await _pokemonContract.GetPokemonsAsync(request);
+
+
+        var pokemons = response.Pokemons.ToModel();
+        return (pokemons, response.TotalRecords);
     public async Task<Pokemon> UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
     {
         try
