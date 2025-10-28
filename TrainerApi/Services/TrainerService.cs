@@ -1,32 +1,25 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using MongoDB.Driver;
-using TrainerApi.Infrastructure.Documents; // Add this using
+using TrainerApi.Infrastructure.Documents;
+using TrainerApi.Mappers;
+using TrainerApi.Repositories;
 
 namespace TrainerApi.Services;
 
 public class TrainerService : TrainerApi.TrainerService.TrainerServiceBase
 {
-    private readonly IMongoCollection<TrainerDocument> _trainersCollection;
-
-    public TrainerService(IMongoDatabase database)
+    private readonly ITrainerRepository _trainerRepository;
+    public TrainerService(ITrainerRepository trainerRepository)
     {
-        _trainersCollection = database.GetCollection<TrainerDocument>("Trainers");
-    }
+        _trainerRepository = trainerRepository;
 
+    }
     public override async Task<TrainerResponse> GetTrainerById(TrainerByIdRequest request, ServerCallContext context)
     {
-        // For now, returning mock data
-        // You can implement MongoDB queries here later
-        return new TrainerResponse
-        {
-            Id = request.Id,
-            Name = "Ash Ketchum",
-            Age = 10,
-            CreatedAt = Timestamp.FromDateTime(DateTime.UtcNow),
-            Birthday = Timestamp.FromDateTime(DateTime.UtcNow),
-        };
+        var trainer = await _trainerRepository.GetByIdAsync(request.Id, context.CancellationToken);
+        if (trainer is null)
+            throw new RpcException(new Status(StatusCode.NotFound, $"Trainer with ID {request.Id} not found."));
+
+        return trainer.ToResponse();
     }
 }
-
-// Remove this duplicate class - use the one in Infrastructure/Documents instead
