@@ -1,5 +1,7 @@
 package com.zelda.weapons.endpoint;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -33,7 +35,8 @@ public class WeaponEndpoint {
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "getWeaponRequest")
     @ResponsePayload
     public GetWeaponResponse getWeapon(@RequestPayload GetWeaponRequest request) {
-        Weapon weaponEntity = weaponService.getWeaponById(request.getId());
+        UUID weaponId = UUID.fromString(request.getId());
+        Weapon weaponEntity = weaponService.getWeaponById(weaponId);
         com.zelda.weapons.ws.Weapon weaponSoap = weaponMapper.entityToSoap(weaponEntity);
         
         GetWeaponResponse response = new GetWeaponResponse();
@@ -57,7 +60,8 @@ public class WeaponEndpoint {
     @ResponsePayload
     public DeleteWeaponResponse deleteWeapon(@RequestPayload DeleteWeaponRequest request) {
         try {
-            weaponService.deleteWeapon(request.getId());
+            UUID weaponId = UUID.fromString(request.getId());
+            weaponService.deleteWeapon(weaponId);
             
             DeleteWeaponResponse response = new DeleteWeaponResponse();
             response.setSuccess(true);

@@ -11,7 +11,7 @@ public class WeaponMapper {
         }
 
         com.zelda.weapons.ws.Weapon soapWeapon = new com.zelda.weapons.ws.Weapon();
-        soapWeapon.setId(entityWeapon.getId());
+        soapWeapon.setId(entityWeapon.getId().toString());
         soapWeapon.setName(entityWeapon.getName());
         soapWeapon.setType(mapWeaponTypeToSoap(entityWeapon.getWeaponType()));
         soapWeapon.setDamage(entityWeapon.getDamage());

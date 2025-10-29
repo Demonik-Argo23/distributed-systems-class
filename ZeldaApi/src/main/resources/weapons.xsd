@@ -7,7 +7,7 @@
     <xs:element name="getWeaponRequest">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="id" type="xs:long" />
+                <xs:element name="id" type="xs:string" />
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -39,7 +39,7 @@
     <xs:element name="deleteWeaponRequest">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="id" type="xs:long" />
+                <xs:element name="id" type="xs:string" />
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -55,7 +55,7 @@
 
     <xs:complexType name="weapon">
         <xs:sequence>
-            <xs:element name="id" type="xs:long" />
+            <xs:element name="id" type="xs:string" />
             <xs:element name="name" type="xs:string" />
             <xs:element name="type" type="tns:weaponType" />
             <xs:element name="damage" type="xs:int" />

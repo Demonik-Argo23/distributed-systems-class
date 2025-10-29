@@ -1,5 +1,7 @@
 package com.zelda.weapons.validator;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 import com.zelda.weapons.model.Weapon;
@@ -7,9 +9,9 @@ import com.zelda.weapons.model.Weapon;
 @Component
 public class WeaponValidator {
 
-    public void validateWeaponId(Long weaponId) {
-        if (weaponId == null || weaponId <= 0) {
-            throw new WeaponValidationException("El ID del arma debe ser un número positivo");
+    public void validateWeaponId(UUID weaponId) {
+        if (weaponId == null) {
+            throw new WeaponValidationException("El ID del arma es obligatorio");
         }
     }
 
