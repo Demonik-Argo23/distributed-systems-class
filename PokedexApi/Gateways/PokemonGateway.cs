@@ -88,6 +88,7 @@ public class PokemonGateway : IPokemonGateway
 
         var pokemons = response.Pokemons.ToModel();
         return (pokemons, response.TotalRecords);
+    }
     public async Task<Pokemon> UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
     {
         try

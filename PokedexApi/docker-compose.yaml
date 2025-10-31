@@ -7,16 +7,15 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8082:8080"
-    restart: unless-stopped
     depends_on:
       - hydra-admin
       - hydra-public
     environment:
       - Authentication__Authority=http://hydra-public:4444/
       - Authentication__Issuer=http://hydra-public:4444/
+      - TrainerApiEndpoints=http://host.docker.internal:9080
   postgres:
     image: postgres:15
-    restart: unless-stopped
     environment:
       POSTGRES_USER: hydra
       POSTGRES_PASSWORD: secret
@@ -28,10 +27,8 @@ services:
 
   hydra-admin:
     image: oryd/hydra:v2.2
-    restart: unless-stopped
     depends_on:
       - postgres
-      - hydra-migrate
     environment:
       - DSN=postgres://hydra:secret@postgres:5432/hydra?sslmode=disable
       - URLS_SELF_ISSUER=http://hydra-public:4444
@@ -43,10 +40,8 @@ services:
 
   hydra-public:
     image: oryd/hydra:v2.2
-    restart: unless-stopped
     depends_on:
       - postgres
-      - hydra-migrate
     environment:
       - DSN=postgres://hydra:secret@postgres:5432/hydra?sslmode=disable
       - URLS_SELF_ISSUER=http://hydra-public:4444
