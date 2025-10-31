@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,7 @@ public class WeaponsController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener arma por ID", description = "Obtiene un arma específica del Codex por su ID")
+    @SecurityRequirement(name = "oauth2", scopes = {"read"})
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Arma encontrada exitosamente"),
         @ApiResponse(responseCode = "404", description = "Arma no encontrada"),
@@ -63,6 +65,7 @@ public class WeaponsController {
 
     @GetMapping
     @Operation(summary = "Obtener listado de armas", description = "Obtiene un listado paginado de armas con filtros opcionales")
+    @SecurityRequirement(name = "oauth2", scopes = {"read"})
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Listado obtenido exitosamente"),
         @ApiResponse(responseCode = "400", description = "Parámetros de paginación inválidos")
@@ -104,6 +107,7 @@ public class WeaponsController {
 
     @PostMapping
     @Operation(summary = "Crear nueva arma", description = "Registra una nueva arma en el Codex")
+    @SecurityRequirement(name = "oauth2", scopes = {"write"})
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Arma creada exitosamente con header Location"),
         @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos - error de validación"),
@@ -127,6 +131,7 @@ public class WeaponsController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Reemplazar arma", description = "Reemplaza completamente un arma existente")
+    @SecurityRequirement(name = "oauth2", scopes = {"write"})
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Arma reemplazada exitosamente"),
         @ApiResponse(responseCode = "201", description = "Arma creada porque no existía previamente"),
@@ -167,6 +172,7 @@ public class WeaponsController {
 
     @PatchMapping("/{id}")
     @Operation(summary = "Actualizar arma parcialmente", description = "Actualiza parcialmente los campos especificados de un arma")
+    @SecurityRequirement(name = "oauth2", scopes = {"write"})
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Arma actualizada exitosamente"),
         @ApiResponse(responseCode = "404", description = "Arma no encontrada"),
@@ -187,6 +193,7 @@ public class WeaponsController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar arma", description = "Elimina un arma del Codex")
+    @SecurityRequirement(name = "oauth2", scopes = {"write"})
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Arma eliminada exitosamente - sin contenido"),
         @ApiResponse(responseCode = "404", description = "Arma no encontrada"),

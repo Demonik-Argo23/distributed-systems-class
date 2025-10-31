@@ -4,6 +4,8 @@ import com.zelda.codex.dtos.Link;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,5 +64,33 @@ public class ApiInfoController {
         apiInfo.put("documentation", documentation);
         
         return ResponseEntity.ok(apiInfo);
+    }
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @GetMapping("/cache/info")
+    @Operation(summary = "Información del cache", description = "Obtiene información sobre el estado del cache Redis")
+    @ApiResponse(responseCode = "200", description = "Información del cache obtenida exitosamente")
+    public ResponseEntity<Map<String, Object>> getCacheInfo() {
+        Map<String, Object> cacheInfo = new HashMap<>();
+        
+        cacheInfo.put("cacheManager", cacheManager.getClass().getSimpleName());
+        cacheInfo.put("availableCaches", cacheManager.getCacheNames());
+        cacheInfo.put("totalCaches", cacheManager.getCacheNames().size());
+        cacheInfo.put("timestamp", LocalDateTime.now());
+        
+        Map<String, String> configuration = new HashMap<>();
+        configuration.put("type", "Redis");
+        configuration.put("defaultTTL", "10 minutos");
+        configuration.put("serialization", "JSON");
+        cacheInfo.put("configuration", configuration);
+        
+        Map<String, String> cacheTypes = new HashMap<>();
+        cacheTypes.put("weapons", "Cache individual de armas por ID");
+        cacheTypes.put("weaponsList", "Cache de listados paginados con filtros");
+        cacheInfo.put("cacheTypes", cacheTypes);
+        
+        return ResponseEntity.ok(cacheInfo);
     }
 }

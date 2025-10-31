@@ -2,6 +2,8 @@ package com.zelda.codex.dtos;
 
 import com.zelda.codex.models.Element;
 import com.zelda.codex.models.WeaponType;
+import com.zelda.codex.validators.ValidElement;
+import com.zelda.codex.validators.ValidWeaponType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
@@ -10,10 +12,12 @@ public class ReplaceWeaponRequest {
 
     @NotBlank(message = "El nombre del arma es obligatorio")
     @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
+    @Pattern(regexp = "^[a-zA-Z0-9\\s\\-']+$", message = "El nombre solo puede contener letras, números, espacios, guiones y apostrofes")
     @Schema(description = "Nombre del arma", example = "Master Sword", required = true)
     private String name;
 
     @NotNull(message = "El tipo de arma es obligatorio")
+    @ValidWeaponType
     @Schema(description = "Tipo de arma", example = "ONE_HANDED_SWORD", required = true)
     private WeaponType weaponType;
 
@@ -29,6 +33,7 @@ public class ReplaceWeaponRequest {
     @Schema(description = "Puntos de durabilidad del arma", example = "200", required = true)
     private Integer durability;
 
+    @ValidElement
     @Schema(description = "Elemento del arma (opcional)", example = "FIRE")
     private Element element;
 

@@ -1,88 +1,138 @@
 package com.zelda.codex.gateways;
 
-import com.zelda.codex.exceptions.WeaponNotFoundException;
+import com.zelda.codex.exceptions.*;
 import com.zelda.codex.models.Weapon;
 import com.zelda.codex.models.Element;
 import com.zelda.codex.models.WeaponType;
+import com.zelda.codex.soap.*;
+import com.zelda.codex.mappers.WeaponMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.ws.client.core.WebServiceTemplate;
+import org.springframework.ws.soap.client.SoapFaultClientException;
 
 import javax.xml.namespace.QName;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 public class WeaponGateway implements IWeaponGateway {
 
+    private static final Logger logger = LoggerFactory.getLogger(WeaponGateway.class);
+
     @Value("${zelda.weapons.soap.url:http://localhost:8081/ws}")
     private String soapServiceUrl;
 
-    private final WebServiceTemplate webServiceTemplate;
+    @Autowired
+    private WebServiceTemplate webServiceTemplate;
 
-    public WeaponGateway() {
-        this.webServiceTemplate = new WebServiceTemplate();
-    }
+    @Autowired
+    private WeaponMapper weaponMapper;
 
     @Override
     public Weapon getWeaponById(UUID id) {
         try {
-            webServiceTemplate.setDefaultUri(soapServiceUrl);
+            logger.info("Obteniendo arma con ID {} del servicio SOAP", id);
             
-            // Crear request SOAP (esto se actualizará cuando tengamos las clases generadas)
-            // GetWeaponRequest request = new GetWeaponRequest();
-            // request.setId(id.toString());
+            GetWeaponRequest request = new GetWeaponRequest();
+            request.setId(id.toString());
             
-            // GetWeaponResponse response = (GetWeaponResponse) webServiceTemplate.marshalSendAndReceive(request);
+            GetWeaponResponse response = (GetWeaponResponse) webServiceTemplate.marshalSendAndReceive(
+                soapServiceUrl, request);
             
-            // Por ahora, simulamos la respuesta para que compile
-            return mockWeaponResponse(id);
+            if (response == null || response.getWeapon() == null) {
+                throw new WeaponNotFoundException(id);
+            }
             
+            // Convertir de SOAP a modelo interno
+            return weaponMapper.soapToModel(response.getWeapon());
+            
+        } catch (SoapFaultClientException ex) {
+            logger.error("Error SOAP al obtener arma por ID {}: {}", id, ex.getFaultStringOrReason());
+            if (ex.getFaultStringOrReason().contains("NOT_FOUND")) {
+                throw new WeaponNotFoundException(id);
+            }
+            throw new SoapValidationException("Error de validación en el servicio SOAP: " + ex.getFaultStringOrReason());
+        } catch (WeaponNotFoundException ex) {
+            throw ex;
         } catch (Exception ex) {
-            throw new WeaponNotFoundException(id);
+            if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketTimeoutException) {
+                logger.error("Servicio SOAP no disponible: {}", ex.getMessage());
+                throw new SoapServiceUnavailableException("El servicio SOAP no está disponible");
+            }
+            logger.error("Error genérico en servicio SOAP: {}", ex.getMessage());
+            throw new SoapServiceException("Error en el servicio SOAP: " + ex.getMessage());
         }
     }
 
     @Override
     public Weapon createWeapon(Weapon weapon) {
         try {
-            webServiceTemplate.setDefaultUri(soapServiceUrl);
+            logger.info("Creando nueva arma en el servicio SOAP: {}", weapon.getName());
             
-            // Crear request SOAP (esto se actualizará cuando tengamos las clases generadas)
-            // CreateWeaponRequest request = new CreateWeaponRequest();
-            // ... mapear weapon a SOAP request
+            CreateWeaponRequest request = new CreateWeaponRequest();
+            WeaponInput weaponInput = weaponMapper.modelToSoapInput(weapon);
+            request.setWeaponInput(weaponInput);
             
-            // CreateWeaponResponse response = (CreateWeaponResponse) webServiceTemplate.marshalSendAndReceive(request);
+            CreateWeaponResponse response = (CreateWeaponResponse) webServiceTemplate.marshalSendAndReceive(
+                soapServiceUrl, request);
             
-            // Por ahora, simulamos la respuesta
-            weapon.setId(UUID.randomUUID());
-            return weapon;
+            if (response == null || response.getWeapon() == null) {
+                throw new SoapServiceException("Respuesta vacía del servicio SOAP al crear arma");
+            }
             
+            return weaponMapper.soapToModel(response.getWeapon());
+            
+        } catch (SoapFaultClientException ex) {
+            logger.error("Error SOAP al crear arma: {}", ex.getFaultStringOrReason());
+            if (ex.getFaultStringOrReason().contains("ALREADY_EXISTS")) {
+                throw new WeaponAlreadyExistsException(weapon.getName());
+            }
+            throw new SoapValidationException("Error de validación en el servicio SOAP: " + ex.getFaultStringOrReason());
         } catch (Exception ex) {
-            throw new RuntimeException("Error creando arma: " + ex.getMessage(), ex);
+            if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketTimeoutException) {
+                logger.error("Servicio SOAP no disponible: {}", ex.getMessage());
+                throw new SoapServiceUnavailableException("El servicio SOAP no está disponible");
+            }
+            logger.error("Error genérico en servicio SOAP: {}", ex.getMessage());
+            throw new SoapServiceException("Error en el servicio SOAP: " + ex.getMessage());
         }
     }
 
     @Override
     public boolean deleteWeapon(UUID id) {
         try {
-            webServiceTemplate.setDefaultUri(soapServiceUrl);
+            logger.info("Eliminando arma con ID {} en el servicio SOAP", id);
             
-            // Crear request SOAP (esto se actualizará cuando tengamos las clases generadas)
-            // DeleteWeaponRequest request = new DeleteWeaponRequest();
-            // request.setId(id.toString());
+            DeleteWeaponRequest request = new DeleteWeaponRequest();
+            request.setId(id.toString());
             
-            // DeleteWeaponResponse response = (DeleteWeaponResponse) webServiceTemplate.marshalSendAndReceive(request);
-            // return response.isSuccess();
+            DeleteWeaponResponse response = (DeleteWeaponResponse) webServiceTemplate.marshalSendAndReceive(
+                soapServiceUrl, request);
             
-            // Por ahora, simulamos éxito
-            return true;
+            return response != null && response.isSuccess();
             
+        } catch (SoapFaultClientException ex) {
+            logger.error("Error SOAP al eliminar arma con ID {}: {}", id, ex.getFaultStringOrReason());
+            if (ex.getFaultStringOrReason().contains("NOT_FOUND")) {
+                throw new WeaponNotFoundException(id);
+            }
+            throw new SoapValidationException("Error de validación en el servicio SOAP: " + ex.getFaultStringOrReason());
         } catch (Exception ex) {
-            throw new WeaponNotFoundException(id);
+            if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketTimeoutException) {
+                logger.error("Servicio SOAP no disponible: {}", ex.getMessage());
+                throw new SoapServiceUnavailableException("El servicio SOAP no está disponible");
+            }
+            logger.error("Error genérico en servicio SOAP: {}", ex.getMessage());
+            throw new SoapServiceException("Error en el servicio SOAP: " + ex.getMessage());
         }
     }
 

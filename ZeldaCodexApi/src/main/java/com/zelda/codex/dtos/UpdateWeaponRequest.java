@@ -2,6 +2,8 @@ package com.zelda.codex.dtos;
 
 import com.zelda.codex.models.Element;
 import com.zelda.codex.models.WeaponType;
+import com.zelda.codex.validators.ValidElement;
+import com.zelda.codex.validators.ValidWeaponType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
@@ -12,6 +14,7 @@ public class UpdateWeaponRequest {
     @Schema(description = "Nombre del arma", example = "Master Sword")
     private String name;
 
+    @ValidWeaponType
     @Schema(description = "Tipo de arma", example = "ONE_HANDED_SWORD")
     private WeaponType weaponType;
 
@@ -25,6 +28,7 @@ public class UpdateWeaponRequest {
     @Schema(description = "Puntos de durabilidad del arma", example = "200")
     private Integer durability;
 
+    @ValidElement
     @Schema(description = "Elemento del arma", example = "FIRE")
     private Element element;
 

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://zelda.com/weapons"
+           xmlns:tns="http://zelda.com/weapons"
+           elementFormDefault="qualified">
+
+    <!-- Tipos enumerados -->
+    <xs:simpleType name="weaponType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="ONE_HANDED_SWORD"/>
+            <xs:enumeration value="TWO_HANDED_SWORD"/>
+            <xs:enumeration value="SPEAR"/>
+            <xs:enumeration value="BOW"/>
+            <xs:enumeration value="SHIELD"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="element">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="FIRE"/>
+            <xs:enumeration value="ICE"/>
+            <xs:enumeration value="LIGHTNING"/>
+            <xs:enumeration value="NONE"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Tipos complejos -->
+    <xs:complexType name="weapon">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" minOccurs="0"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="weaponType" type="tns:weaponType"/>
+            <xs:element name="damage" type="xs:int"/>
+            <xs:element name="durability" type="xs:int"/>
+            <xs:element name="element" type="tns:element"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="weaponInput">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="weaponType" type="tns:weaponType"/>
+            <xs:element name="damage" type="xs:int"/>
+            <xs:element name="durability" type="xs:int"/>
+            <xs:element name="element" type="tns:element"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Requests y Responses -->
+    <xs:element name="getWeaponRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="id" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getWeaponResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="weapon" type="tns:weapon"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="createWeaponRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="weaponInput" type="tns:weaponInput"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="createWeaponResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="weapon" type="tns:weapon"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteWeaponRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="id" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteWeaponResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

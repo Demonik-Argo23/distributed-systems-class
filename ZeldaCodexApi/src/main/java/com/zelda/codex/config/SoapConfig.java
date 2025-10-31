@@ -11,7 +11,7 @@ public class SoapConfig {
     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        // Configurar el paquete donde estarán las clases generadas desde el WSDL
+        // Configurar el paquete donde estarán las clases generadas desde el XSD
         marshaller.setContextPath("com.zelda.codex.soap");
         return marshaller;
     }
@@ -21,6 +21,11 @@ public class SoapConfig {
         WebServiceTemplate webServiceTemplate = new WebServiceTemplate();
         webServiceTemplate.setMarshaller(marshaller);
         webServiceTemplate.setUnmarshaller(marshaller);
+        webServiceTemplate.setDefaultUri("${zelda.weapons.soap.url:http://localhost:8081/ws}");
+        
+        // Configurar timeouts para manejo de errores
+        webServiceTemplate.setCheckConnectionForFault(true);
+        
         return webServiceTemplate;
     }
 }
