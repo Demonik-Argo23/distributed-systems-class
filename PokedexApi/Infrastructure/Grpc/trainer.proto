@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package trainerpb;
+
+option csharp_namespace = "PokedexApi";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service TrainerService {
+    rpc GetTrainerById (TrainerByIdRequest) returns (TrainerResponse); // Unary
+    rpc GetAllTrainersByName (TrainersByNameRequest) returns (stream TrainerResponse); // Server streaming
+    rpc CreateTrainers (stream CreateTrainerRequest) returns (CreateTrainerResponse);// Client streaming
+    rpc DeleteTrainer (TrainerByIdRequest) returns (google.protobuf.Empty);// Unary
+    rpc UpdateTrainer (UpdateTrainerRequest) returns (google.protobuf.Empty);// Unary
+}
+
+message UpdateTrainerRequest {
+    string id = 1;
+    string name = 2;
+    int32 age = 3;
+    google.protobuf.Timestamp birthdate = 4;
+    repeated Medal medals = 5;
+}
+
+message TrainersByNameRequest {
+    string name = 1;
+}
+
+
+message CreateTrainerRequest {
+    string name = 1;
+    int32 age = 2;
+    google.protobuf.Timestamp birthdate = 3;
+    repeated Medal medals = 4;
+}
+
+message CreateTrainerResponse {
+    int32 successCount = 1;
+    repeated TrainerResponse trainers = 2;
+}
+
+
+message TrainerByIdRequest {
+    string id = 1;
+}
+
+message TrainerResponse {
+    string id = 1;
+    string name = 2;
+    int32 age = 3;
+    google.protobuf.Timestamp birthdate = 4;
+    google.protobuf.Timestamp createdAt = 5;
+    repeated Medal medals = 6;
+}
+
+message Medal{
+    string region = 1;
+    MedalType type = 2;
+}
+
+enum MedalType{
+    UNKNOWN = 0;
+    GOLD = 1;
+    SILVER = 2;
+    BRONZE = 3;
+}
