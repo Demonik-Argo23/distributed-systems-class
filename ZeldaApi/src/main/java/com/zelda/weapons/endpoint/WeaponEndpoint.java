@@ -21,7 +21,7 @@ import com.zelda.weapons.ws.GetWeaponResponse;
 @Endpoint
 public class WeaponEndpoint {
 
-    private static final String NAMESPACE_URI = "http://weapons.zelda.com/ws";
+    private static final String NAMESPACE_URI = "http://zelda.com/weapons";
 
     private final WeaponService weaponService;
     private final WeaponMapper weaponMapper;
@@ -47,7 +47,7 @@ public class WeaponEndpoint {
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "createWeaponRequest")
     @ResponsePayload
     public CreateWeaponResponse createWeapon(@RequestPayload CreateWeaponRequest request) {
-        Weapon weaponEntity = weaponMapper.soapInputToEntity(request.getWeapon());
+        Weapon weaponEntity = weaponMapper.soapInputToEntity(request.getWeaponInput());
         Weapon createdWeapon = weaponService.createWeapon(weaponEntity);
         com.zelda.weapons.ws.Weapon weaponSoap = weaponMapper.entityToSoap(createdWeapon);
         

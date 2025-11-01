@@ -1,16 +1,21 @@
 package com.zelda.codex.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/cache")
@@ -79,7 +84,6 @@ public class CacheController {
         response.put("availableCaches", cacheManager.getCacheNames());
         response.put("totalCaches", cacheManager.getCacheNames().size());
         
-        // Información específica de cada cache
         Map<String, Object> cacheDetails = new HashMap<>();
         for (String cacheName : cacheManager.getCacheNames()) {
             var cache = cacheManager.getCache(cacheName);
@@ -105,7 +109,6 @@ public class CacheController {
         response.put("note", "Para métricas detalladas, habilitar Spring Boot Actuator con micrometer");
         response.put("availableCaches", cacheManager.getCacheNames());
         
-        // Información básica de configuración
         Map<String, Object> config = new HashMap<>();
         config.put("cacheType", "Redis");
         config.put("defaultTTL", "10 minutos");

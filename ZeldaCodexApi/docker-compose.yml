@@ -10,12 +10,9 @@ services:
       - ZELDA_WEAPONS_SOAP_URL=http://zelda-weapons-api:8081/ws
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://hydra:4444/
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://hydra:4444/.well-known/jwks.json
     depends_on:
       - zelda-weapons-api
       - redis
-      - hydra
     networks:
       - zelda-network
 
@@ -43,12 +40,10 @@ services:
       POSTGRES_DB: zelda_weapons_db
       POSTGRES_USER: zelda_user
       POSTGRES_PASSWORD: zelda_pass
-      POSTGRES_MULTIPLE_DATABASES: hydra_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
     networks:
       - zelda-network
     healthcheck:
@@ -72,28 +67,6 @@ services:
       timeout: 5s
       retries: 5
     command: redis-server --appendonly yes
-
-  hydra:
-    image: oryd/hydra:v2.2.0
-    container_name: zelda-hydra
-    ports:
-      - "4444:4444" # Public port
-      - "4445:4445" # Admin port
-    environment:
-      - DSN=postgres://zelda_user:zelda_pass@postgres:5432/hydra_db?sslmode=disable&max_conns=20&max_idle_conns=4
-      - URLS_SELF_ISSUER=http://localhost:4444/
-      - URLS_CONSENT=http://localhost:3000/consent
-      - URLS_LOGIN=http://localhost:3000/login
-      - SECRETS_SYSTEM=youReallyNeedToChangeThis
-      - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
-      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
-    command: serve all --dev
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - zelda-network
-    restart: unless-stopped
 
 volumes:
   postgres_data:

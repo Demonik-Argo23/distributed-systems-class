@@ -1,32 +1,29 @@
-# Integración SOAP - ZeldaCodexApi con ZeldaWeaponsApi
+# Integración SOAP - ZeldaCodexApi
 
-## 📋 Descripción General
+## Descripción
 
-La API REST **ZeldaCodexApi** funciona como un gateway que consume el servicio SOAP **ZeldaWeaponsApi** para todas las operaciones relacionadas con armas. Esta arquitectura permite separar la lógica de presentación REST de la lógica de negocio SOAP.
+ZeldaCodexApi funciona como gateway REST que consume el servicio SOAP ZeldaWeaponsApi para todas las operaciones de armas. Esta arquitectura separa la presentación REST de la lógica de negocio SOAP.
 
-## 🔄 Flujo de Integración
-
-### Arquitectura de Componentes
+## Arquitectura
 
 ```
 Cliente REST → ZeldaCodexApi (Gateway) → ZeldaWeaponsApi (SOAP) → PostgreSQL
 ```
 
-### Mapeo de Operaciones
+## Mapeo de Operaciones
 
-| Operación REST | Método HTTP | Endpoint REST | Operación SOAP | Descripción |
-|----------------|-------------|---------------|----------------|-------------|
-| Obtener arma | `GET` | `/weapons/{id}` | `getWeapon` | Consulta una arma específica |
-| Listar armas | `GET` | `/weapons` | `getAllWeapons` | Obtiene lista paginada |
-| Crear arma | `POST` | `/weapons` | `createWeapon` | Crea nueva arma |
-| Actualizar arma | `PUT` | `/weapons/{id}` | `updateWeapon` | Actualización completa |
-| Actualizar parcial | `PATCH` | `/weapons/{id}` | `updateWeapon` | Actualización parcial |
-| Eliminar arma | `DELETE` | `/weapons/{id}` | `deleteWeapon` | Elimina arma |
+| REST | HTTP | Endpoint | SOAP Operation | Descripción |
+|------|------|----------|----------------|-------------|
+| Obtener arma | GET | `/weapons/{id}` | `getWeapon` | Consulta una arma específica |
+| Listar armas | GET | `/weapons` | `getAllWeapons` | Lista paginada de armas |
+| Crear arma | POST | `/weapons` | `createWeapon` | Crea nueva arma |
+| Actualizar | PUT | `/weapons/{id}` | `updateWeapon` | Actualización completa |
+| Actualizar parcial | PATCH | `/weapons/{id}` | `updateWeapon` | Actualización parcial |
+| Eliminar | DELETE | `/weapons/{id}` | `deleteWeapon` | Elimina arma |
 
-## 🔧 Configuración de Componentes
+## Configuración SOAP
 
-### 1. WebServiceTemplate (SoapConfig)
-
+### WebServiceTemplate
 ```java
 @Configuration
 public class SoapConfig {
@@ -40,229 +37,235 @@ public class SoapConfig {
         template.setCheckConnectionForFault(true);
         return template;
     }
+
+    @Bean
+    public Jaxb2Marshaller marshaller() {
+        Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+        marshaller.setContextPath("com.zelda.codex.soap");
+        return marshaller;
+    }
 }
 ```
 
-### 2. WeaponMapper - Conversión de Datos
+### Generación de Clases SOAP
+```xml
+<plugin>
+    <groupId>org.jvnet.jaxb2.maven2</groupId>
+    <artifactId>maven-jaxb2-plugin</artifactId>
+    <version>0.15.3</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>generate</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <schemaLanguage>WSDL</schemaLanguage>
+        <generatePackage>com.zelda.codex.soap</generatePackage>
+        <schemas>
+            <schema>
+                <url>http://localhost:8081/ws/weapons.wsdl</url>
+            </schema>
+        </schemas>
+    </configuration>
+</plugin>
+```
 
-**SOAP → Modelo Interno:**
+## Mapeo de Datos
+
+### WeaponMapper
 ```java
-public Weapon soapToModel(com.zelda.codex.soap.Weapon soapWeapon) {
-    // Convierte objeto SOAP a modelo de dominio
-    // Mapea enums: WeaponType, Element
-    // Convierte IDs string a UUID
+@Component
+public class WeaponMapper {
+    
+    public Weapon soapToModel(com.zelda.codex.soap.Weapon soapWeapon) {
+        if (soapWeapon == null) return null;
+        
+        return Weapon.builder()
+            .id(UUID.fromString(soapWeapon.getId()))
+            .name(soapWeapon.getName())
+            .weaponType(WeaponType.valueOf(soapWeapon.getWeaponType().name()))
+            .damage(soapWeapon.getDamage())
+            .durability(soapWeapon.getDurability())
+            .element(mapSoapElement(soapWeapon.getElement()))
+            .build();
+    }
+    
+    public com.zelda.codex.soap.WeaponInput modelToSoapInput(CreateWeaponRequest request) {
+        com.zelda.codex.soap.WeaponInput soapInput = new com.zelda.codex.soap.WeaponInput();
+        soapInput.setName(request.getName());
+        soapInput.setWeaponType(com.zelda.codex.soap.WeaponType.valueOf(request.getWeaponType().name()));
+        soapInput.setDamage(request.getDamage());
+        soapInput.setDurability(request.getDurability());
+        soapInput.setElement(mapModelElement(request.getElement()));
+        return soapInput;
+    }
 }
 ```
 
-**Modelo Interno → SOAP:**
-```java
-public WeaponInput modelToSoapInput(Weapon weapon) {
-    // Convierte modelo de dominio a objeto SOAP
-    // Mapea enums inversos
-    // Prepara para envío SOAP
-}
-```
+## Cliente SOAP (WeaponGateway)
 
-### 3. WeaponGateway - Cliente SOAP
-
-Implementa todas las operaciones con manejo robusto de errores:
-
+### Implementación
 ```java
 @Component
 public class WeaponGateway implements IWeaponGateway {
     
-    @Autowired
-    private WebServiceTemplate webServiceTemplate;
+    private final WebServiceTemplate webServiceTemplate;
+    private final WeaponMapper weaponMapper;
     
-    @Autowired
-    private WeaponMapper weaponMapper;
+    @Override
+    public List<Weapon> getAllWeapons() {
+        GetAllWeaponsRequest request = new GetAllWeaponsRequest();
+        GetAllWeaponsResponse response = (GetAllWeaponsResponse) 
+            webServiceTemplate.marshalSendAndReceive(request);
+        
+        return response.getWeapons().stream()
+            .map(weaponMapper::soapToModel)
+            .collect(Collectors.toList());
+    }
     
-    // Implementación de operaciones CRUD con SOAP
+    @Override
+    public Optional<Weapon> getWeaponById(UUID id) {
+        try {
+            GetWeaponRequest request = new GetWeaponRequest();
+            request.setId(id.toString());
+            
+            GetWeaponResponse response = (GetWeaponResponse) 
+                webServiceTemplate.marshalSendAndReceive(request);
+                
+            return Optional.of(weaponMapper.soapToModel(response.getWeapon()));
+            
+        } catch (SoapFaultClientException ex) {
+            if (ex.getMessage().contains("Weapon not found")) {
+                return Optional.empty();
+            }
+            throw new SoapServiceException("Error getting weapon by ID: " + id, ex);
+        }
+    }
+    
+    @Override
+    public Weapon createWeapon(CreateWeaponRequest createRequest) {
+        CreateWeaponRequest soapRequest = new CreateWeaponRequest();
+        soapRequest.setWeaponInput(weaponMapper.modelToSoapInput(createRequest));
+        
+        CreateWeaponResponse response = (CreateWeaponResponse) 
+            webServiceTemplate.marshalSendAndReceive(soapRequest);
+            
+        return weaponMapper.soapToModel(response.getWeapon());
+    }
 }
 ```
 
-## 🚨 Manejo de Errores SOAP
+## Manejo de Errores
 
-### Mapeo de Excepciones
+### Excepciones Personalizadas
+```java
+@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+public class SoapServiceException extends RuntimeException {
+    public SoapServiceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
 
-| Error SOAP | Excepción Interna | Código HTTP | Descripción |
-|------------|-------------------|-------------|-------------|
-| `SoapFaultClientException` | `SoapValidationException` | `424` | Error de validación SOAP |
-| `ConnectException` | `SoapServiceUnavailableException` | `502` | Servicio no disponible |
-| `SocketTimeoutException` | `SoapServiceUnavailableException` | `502` | Timeout de conexión |
-| SOAP Fault "NOT_FOUND" | `WeaponNotFoundException` | `404` | Recurso no encontrado |
-| SOAP Fault "ALREADY_EXISTS" | `WeaponAlreadyExistsException` | `409` | Recurso ya existe |
-| Otros errores SOAP | `SoapServiceException` | `502` | Error genérico del gateway |
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class WeaponNotFoundException extends RuntimeException {
+    public WeaponNotFoundException(String message) {
+        super(message);
+    }
+}
+```
 
-### Flujo de Manejo de Errores
+### Manejo Global de Errores
+```java
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    
+    @ExceptionHandler(SoapServiceException.class)
+    public ResponseEntity<ErrorResponse> handleSoapServiceException(SoapServiceException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(new ErrorResponse("SOAP service error", ex.getMessage()));
+    }
+    
+    @ExceptionHandler(WebServiceIOException.class)
+    public ResponseEntity<ErrorResponse> handleWebServiceIOException(WebServiceIOException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(new ErrorResponse("SOAP service unavailable", "Unable to connect to SOAP service"));
+    }
+}
+```
 
-1. **WeaponGateway** captura excepciones SOAP
-2. **Mapea** a excepciones de dominio específicas
-3. **GlobalExceptionHandler** intercepta y convierte a respuestas HTTP
-4. **Cliente** recibe respuesta JSON estructurada con `ErrorResponse`
+## Configuración
 
-## 🐳 Configuración Docker
+### application.properties
+```properties
+# SOAP Service Configuration
+zelda.weapons.soap.url=http://localhost:8081/ws
+zelda.weapons.soap.timeout.connection=5000
+zelda.weapons.soap.timeout.read=10000
 
-### docker-compose.yml
+# SOAP Logging (for debugging)
+logging.level.org.springframework.ws=DEBUG
+logging.level.com.zelda.codex.gateways=DEBUG
+```
 
+### Docker Compose Integration
 ```yaml
 services:
-  zelda-codex-api:          # Gateway REST (Puerto 8082)
+  zelda-codex-api:
     build: .
+    ports:
+      - "8082:8082"
     depends_on:
       - zelda-weapons-api
     environment:
-      - ZELDA_WEAPONS_SOAP_URL=http://zelda-weapons-api:8081/ws
-
-  zelda-weapons-api:        # Servicio SOAP (Puerto 8081)
-    build:
-      context: ../ZeldaApi
+      - SOAP_SERVICE_URL=http://zelda-weapons-api:8081/ws
+      
+  zelda-weapons-api:
+    image: demonik23/zelda-weapons-api:latest
+    ports:
+      - "8081:8081"
     depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/zelda_weapons_db
-
-  postgres:                 # Base de datos (Puerto 5432)
-    image: postgres:15-alpine
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U zelda_user -d zelda_weapons_db"]
+      - postgres
 ```
 
-## 📊 Flujo de Datos Detallado
+## Testing
 
-### Ejemplo: Crear Arma
-
-1. **Cliente → REST API:**
-   ```json
-   POST /api/v1/weapons
-   {
-     "name": "Master Sword",
-     "weaponType": "ONE_HANDED_SWORD",
-     "damage": 30,
-     "durability": 200,
-     "element": "NONE"
-   }
-   ```
-
-2. **REST API → WeaponService:**
-   ```java
-   CreateWeaponRequest request = // JSON deserializado
-   Weapon weapon = weaponMapper.fromCreateRequest(request);
-   ```
-
-3. **WeaponService → WeaponGateway:**
-   ```java
-   Weapon createdWeapon = weaponGateway.createWeapon(weapon);
-   ```
-
-4. **WeaponGateway → SOAP:**
-   ```java
-   CreateWeaponRequest soapRequest = new CreateWeaponRequest();
-   WeaponInput input = weaponMapper.modelToSoapInput(weapon);
-   soapRequest.setWeaponInput(input);
-   
-   CreateWeaponResponse soapResponse = webServiceTemplate
-       .marshalSendAndReceive(soapServiceUrl, soapRequest);
-   ```
-
-5. **SOAP → PostgreSQL:**
-   ```xml
-   <soap:Envelope>
-     <soap:Body>
-       <createWeaponRequest>
-         <weaponInput>
-           <name>Master Sword</name>
-           <weaponType>ONE_HANDED_SWORD</weaponType>
-           <damage>30</damage>
-           <durability>200</durability>
-           <element>NONE</element>
-         </weaponInput>
-       </createWeaponRequest>
-     </soap:Body>
-   </soap:Envelope>
-   ```
-
-6. **Respuesta PostgreSQL → SOAP → REST:**
-   ```java
-   Weapon resultWeapon = weaponMapper.soapToModel(soapResponse.getWeapon());
-   WeaponResponse response = weaponMapper.toResponse(resultWeapon);
-   response.setLinks(hateoasLinkService.generateWeaponLinks(resultWeapon.getId()));
-   ```
-
-## 🧪 Testing Local
-
-### Comandos de Inicio
-
+### Validar Conexión SOAP
 ```bash
-# 1. Iniciar todos los servicios
-docker-compose up --build
+# Verificar WSDL disponible
+curl http://localhost:8081/ws/weapons.wsdl
 
-# 2. Verificar servicios
-curl http://localhost:8082/api/v1/weapons/info  # REST Gateway
-curl http://localhost:8081/actuator/health      # SOAP Service
+# Probar endpoint SOAP directamente
+curl -X POST http://localhost:8081/ws \
+  -H "Content-Type: text/xml" \
+  -d '<?xml version="1.0"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Body>
+          <getAllWeaponsRequest xmlns="http://zelda.weapons.soap"/>
+        </soap:Body>
+      </soap:Envelope>'
 ```
 
-### Endpoints de Prueba
-
+### Logs de Debug
 ```bash
-# Crear arma
-curl -X POST http://localhost:8082/api/v1/weapons \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Master Sword",
-    "weaponType": "ONE_HANDED_SWORD", 
-    "damage": 30,
-    "durability": 200,
-    "element": "NONE"
-  }'
+# Ver logs de integración SOAP
+docker-compose logs -f zelda-codex-api | grep -i soap
 
-# Obtener arma
-curl http://localhost:8082/api/v1/weapons/{id}
-
-# Listar armas
-curl "http://localhost:8082/api/v1/weapons?page=0&size=10"
+# Ver logs del servicio SOAP
+docker-compose logs -f zelda-weapons-api
 ```
 
-## 🔍 Configuración de Logs
+## Troubleshooting
 
-Para monitorear la integración SOAP:
+**Error: Connection refused**
+- Verificar que ZeldaWeaponsApi esté ejecutándose
+- Verificar configuración de URL en application.properties
 
-```properties
-# application.properties
-logging.level.com.zelda.codex=DEBUG
-logging.level.org.springframework.ws=DEBUG
-logging.level.com.zelda.codex.gateways.WeaponGateway=TRACE
-```
+**Error: SOAP Fault**
+- Revisar logs para detalles del error SOAP
+- Verificar formato de datos enviados
 
-### Logs Clave a Monitorear
-
-- **SOAP Request/Response**: Payloads XML completos
-- **Connection Errors**: Timeouts y conexiones fallidas  
-- **Mapping Errors**: Errores de conversión SOAP ↔ Modelo
-- **Business Logic**: Validaciones y reglas de negocio
-
-## 📈 Métricas y Monitoreo
-
-### Health Checks
-
-```bash
-# Gateway Health
-curl http://localhost:8082/actuator/health
-
-# SOAP Service Health  
-curl http://localhost:8081/actuator/health
-
-# Database Health
-docker exec zelda-postgres pg_isready -U zelda_user -d zelda_weapons_db
-```
-
-### Documentación API
-
-- **Swagger UI**: http://localhost:8082/swagger-ui.html
-- **OpenAPI Spec**: http://localhost:8082/api-docs
-- **SOAP WSDL**: http://localhost:8081/ws/weapons.wsdl
-
----
-
-Esta integración proporciona una arquitectura robusta y escalable que separa claramente las responsabilidades entre el gateway REST y el servicio SOAP, con manejo comprehensivo de errores y documentación completa del flujo de datos.
+**Error: Timeout**
+- Incrementar timeouts en configuración
+- Verificar performance del servicio SOAP

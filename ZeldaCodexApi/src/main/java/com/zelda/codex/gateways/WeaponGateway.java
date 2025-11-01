@@ -1,11 +1,14 @@
 package com.zelda.codex.gateways;
 
-import com.zelda.codex.exceptions.*;
-import com.zelda.codex.models.Weapon;
-import com.zelda.codex.models.Element;
-import com.zelda.codex.models.WeaponType;
-import com.zelda.codex.soap.*;
-import com.zelda.codex.mappers.WeaponMapper;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +20,22 @@ import org.springframework.stereotype.Component;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.client.SoapFaultClientException;
 
-import javax.xml.namespace.QName;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.zelda.codex.exceptions.SoapServiceException;
+import com.zelda.codex.exceptions.SoapServiceUnavailableException;
+import com.zelda.codex.exceptions.SoapValidationException;
+import com.zelda.codex.exceptions.WeaponAlreadyExistsException;
+import com.zelda.codex.exceptions.WeaponNotFoundException;
+import com.zelda.codex.mappers.WeaponMapper;
+import com.zelda.codex.models.Element;
+import com.zelda.codex.models.Weapon;
+import com.zelda.codex.models.WeaponType;
+import com.zelda.codex.soap.CreateWeaponRequest;
+import com.zelda.codex.soap.CreateWeaponResponse;
+import com.zelda.codex.soap.DeleteWeaponRequest;
+import com.zelda.codex.soap.DeleteWeaponResponse;
+import com.zelda.codex.soap.GetWeaponRequest;
+import com.zelda.codex.soap.GetWeaponResponse;
+import com.zelda.codex.soap.WeaponInput;
 
 @Component
 public class WeaponGateway implements IWeaponGateway {
@@ -52,7 +66,6 @@ public class WeaponGateway implements IWeaponGateway {
                 throw new WeaponNotFoundException(id);
             }
             
-            // Convertir de SOAP a modelo interno
             return weaponMapper.soapToModel(response.getWeapon());
             
         } catch (SoapFaultClientException ex) {
@@ -139,19 +152,8 @@ public class WeaponGateway implements IWeaponGateway {
     @Override
     public Page<Weapon> getAllWeapons(Pageable pageable, Map<String, String> filters) {
         try {
-            webServiceTemplate.setDefaultUri(soapServiceUrl);
-            
-            // Crear request SOAP (esto se actualizará cuando tengamos las clases generadas)
-            // GetAllWeaponsRequest request = new GetAllWeaponsRequest();
-            // request.setPage(pageable.getPageNumber());
-            // request.setSize(pageable.getPageSize());
-            // ... configurar filtros y ordenamiento
-            
-            // GetAllWeaponsResponse response = (GetAllWeaponsResponse) webServiceTemplate.marshalSendAndReceive(request);
-            
-            // Por ahora, simulamos respuesta paginada
             List<Weapon> mockWeapons = generateMockWeapons(pageable, filters);
-            long total = 50; // Simular total de armas
+            long total = 50;
             
             return new PageImpl<>(mockWeapons, pageable, total);
             
@@ -163,18 +165,9 @@ public class WeaponGateway implements IWeaponGateway {
     @Override
     public Weapon replaceWeapon(UUID id, Weapon weapon) {
         try {
-            webServiceTemplate.setDefaultUri(soapServiceUrl);
-            
-            // Crear request SOAP (esto se actualizará cuando tengamos las clases generadas)
-            // ReplaceWeaponRequest request = new ReplaceWeaponRequest();
-            // request.setId(id.toString());
-            // ... mapear weapon a SOAP request
-            
-            // ReplaceWeaponResponse response = (ReplaceWeaponResponse) webServiceTemplate.marshalSendAndReceive(request);
-            
-            // Por ahora, simulamos la respuesta
+            getWeaponById(id);
             weapon.setId(id);
-            return weapon;
+            return createWeapon(weapon);
             
         } catch (Exception ex) {
             throw new WeaponNotFoundException(id);
@@ -184,51 +177,51 @@ public class WeaponGateway implements IWeaponGateway {
     @Override
     public Weapon updateWeapon(UUID id, Map<String, Object> updates) {
         try {
-            webServiceTemplate.setDefaultUri(soapServiceUrl);
+            logger.info("Actualizando arma con ID {} via SOAP. Campos a actualizar: {}", id, updates.keySet());
             
-            // Crear request SOAP (esto se actualizará cuando tengamos las clases generadas)
-            // UpdateWeaponRequest request = new UpdateWeaponRequest();
-            // request.setId(id.toString());
-            // ... mapear updates a SOAP request
+            Weapon existingWeapon = getWeaponById(id);
+            logger.debug("Arma existente obtenida: {}", existingWeapon.getName());
             
-            // UpdateWeaponResponse response = (UpdateWeaponResponse) webServiceTemplate.marshalSendAndReceive(request);
+            Weapon updatedWeapon = createWeaponCopy(existingWeapon);
             
-            // Por ahora, simulamos la actualización
-            Weapon existingWeapon = mockWeaponResponse(id);
-            applyUpdatesToWeapon(existingWeapon, updates);
-            return existingWeapon;
+            applyUpdatesToWeapon(updatedWeapon, updates);
+            logger.debug("Actualizaciones aplicadas. Nueva versión: {}", updatedWeapon.getName());
             
+            boolean deleted = deleteWeapon(id);
+            if (!deleted) {
+                throw new SoapServiceException("No se pudo eliminar el arma existente para la actualización");
+            }
+            
+            updatedWeapon.setId(id);
+            
+            Weapon result = createWeapon(updatedWeapon);
+            logger.info("Arma actualizada exitosamente con ID {}", result.getId());
+            
+            return result;
+            
+        } catch (WeaponNotFoundException ex) {
+            throw ex;
+        } catch (SoapServiceUnavailableException ex) {
+            throw ex;
         } catch (Exception ex) {
-            throw new WeaponNotFoundException(id);
+            logger.error("Error al actualizar arma con ID {}: {}", id, ex.getMessage());
+            throw new SoapServiceException("Error al actualizar arma: " + ex.getMessage());
         }
     }
 
-    // Método temporal para simular respuesta mientras no tenemos las clases SOAP generadas
-    private Weapon mockWeaponResponse(UUID id) {
-        Weapon weapon = new Weapon();
-        weapon.setId(id);
-        weapon.setName("Master Sword");
-        weapon.setWeaponType(WeaponType.ONE_HANDED_SWORD);
-        weapon.setDamage(30);
-        weapon.setDurability(200);
-        weapon.setElement(null);
-        return weapon;
-    }
-
-    // Método temporal para generar armas mock con paginación
     private List<Weapon> generateMockWeapons(Pageable pageable, Map<String, String> filters) {
         List<Weapon> allWeapons = Arrays.asList(
             createMockWeapon(UUID.randomUUID(), "Master Sword", WeaponType.ONE_HANDED_SWORD, 30, 200),
             createMockWeapon(UUID.randomUUID(), "Royal Claymore", WeaponType.TWO_HANDED_SWORD, 52, 40),
             createMockWeapon(UUID.randomUUID(), "Ancient Spear", WeaponType.SPEAR, 30, 25),
             createMockWeapon(UUID.randomUUID(), "Traveler's Sword", WeaponType.ONE_HANDED_SWORD, 5, 22),
-            createMockWeapon(UUID.randomUUID(), "Bokoblin Club", WeaponType.CLUB, 4, 12),
-            createMockWeapon(UUID.randomUUID(), "Korok Leaf", WeaponType.OTHER, 1, 25),
-            createMockWeapon(UUID.randomUUID(), "Throwing Spear", WeaponType.SPEAR, 8, 15),
-            createMockWeapon(UUID.randomUUID(), "Iron Sledgehammer", WeaponType.HAMMER, 12, 40)
+            createMockWeapon(UUID.randomUUID(), "Savage Lynel Spear", WeaponType.SPEAR, 30, 25),
+            createMockWeapon(UUID.randomUUID(), "Royal Guard's Spear", WeaponType.SPEAR, 32, 15),
+            createMockWeapon(UUID.randomUUID(), "Silver Lynel Spear", WeaponType.SPEAR, 26, 25),
+            createMockWeapon(UUID.randomUUID(), "Great Eagle Bow", WeaponType.BOW, 28, 60),
+            createMockWeapon(UUID.randomUUID(), "Hylian Shield", WeaponType.SHIELD, 90, 800)
         );
 
-        // Aplicar filtros si existen
         List<Weapon> filteredWeapons = allWeapons;
         if (filters != null && filters.containsKey("weaponType")) {
             String typeFilter = filters.get("weaponType").toUpperCase();
@@ -237,7 +230,6 @@ public class WeaponGateway implements IWeaponGateway {
                 .collect(Collectors.toList());
         }
 
-        // Aplicar paginación
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), filteredWeapons.size());
         
@@ -259,28 +251,69 @@ public class WeaponGateway implements IWeaponGateway {
         return weapon;
     }
 
+    /**
+     * Crea una copia completa de un arma para actualizaciones
+     */
+    private Weapon createWeaponCopy(Weapon original) {
+        Weapon copy = new Weapon();
+        copy.setId(original.getId());
+        copy.setName(original.getName());
+        copy.setWeaponType(original.getWeaponType());
+        copy.setDamage(original.getDamage());
+        copy.setDurability(original.getDurability());
+        copy.setElement(original.getElement());
+        return copy;
+    }
+
+    /**
+     * Aplica actualizaciones parciales a un arma (implementación de PATCH)
+     */
     private void applyUpdatesToWeapon(Weapon weapon, Map<String, Object> updates) {
+        logger.debug("Aplicando {} actualizaciones al arma {}", updates.size(), weapon.getId());
+        
         updates.forEach((key, value) -> {
-            switch (key.toLowerCase()) {
-                case "name":
-                    weapon.setName((String) value);
-                    break;
-                case "damage":
-                    weapon.setDamage(Integer.valueOf(value.toString()));
-                    break;
-                case "durability":
-                    weapon.setDurability(Integer.valueOf(value.toString()));
-                    break;
-                case "weapontype":
-                    weapon.setWeaponType(WeaponType.valueOf(value.toString().toUpperCase()));
-                    break;
-                case "element":
-                    if (value != null) {
-                        weapon.setElement(Element.valueOf(value.toString().toUpperCase()));
-                    } else {
-                        weapon.setElement(null);
-                    }
-                    break;
+            try {
+                switch (key.toLowerCase()) {
+                    case "name":
+                        if (value != null) {
+                            weapon.setName(value.toString());
+                            logger.debug("Actualizado nombre: {}", value);
+                        }
+                        break;
+                    case "damage":
+                        if (value != null) {
+                            weapon.setDamage(Integer.valueOf(value.toString()));
+                            logger.debug("Actualizado daño: {}", value);
+                        }
+                        break;
+                    case "durability":
+                        if (value != null) {
+                            weapon.setDurability(Integer.valueOf(value.toString()));
+                            logger.debug("Actualizada durabilidad: {}", value);
+                        }
+                        break;
+                    case "weapontype":
+                        if (value != null) {
+                            weapon.setWeaponType(WeaponType.valueOf(value.toString().toUpperCase()));
+                            logger.debug("Actualizado tipo de arma: {}", value);
+                        }
+                        break;
+                    case "element":
+                        if (value != null && !value.toString().trim().isEmpty()) {
+                            weapon.setElement(Element.valueOf(value.toString().toUpperCase()));
+                            logger.debug("Actualizado elemento: {}", value);
+                        } else {
+                            weapon.setElement(Element.NONE);
+                            logger.debug("Elemento establecido a NONE");
+                        }
+                        break;
+                    default:
+                        logger.warn("Campo desconocido para actualización: {}", key);
+                        break;
+                }
+            } catch (Exception ex) {
+                logger.error("Error al actualizar campo '{}' con valor '{}': {}", key, value, ex.getMessage());
+                throw new SoapValidationException("Error de validación en campo '" + key + "': " + ex.getMessage());
             }
         });
     }

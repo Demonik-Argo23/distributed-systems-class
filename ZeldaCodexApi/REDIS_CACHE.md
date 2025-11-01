@@ -1,10 +1,10 @@
 # Sistema de Cache Redis - ZeldaCodexApi
 
-## 📋 Descripción General
+## Descripción
 
-El sistema de cache implementado utiliza **Redis** para mejorar significativamente el performance de las operaciones de consulta (GET), reduciendo la latencia y la carga sobre el servicio SOAP backend.
+El sistema implementa Redis para mejorar el performance de las operaciones de consulta (GET), reduciendo la latencia y la carga sobre el servicio SOAP backend.
 
-## 🏗️ Arquitectura de Cache
+## Arquitectura de Cache
 
 ```
 Cliente REST → ZeldaCodexApi → Cache Redis → ZeldaWeaponsApi (SOAP) → PostgreSQL
@@ -15,7 +15,7 @@ Cliente REST → ZeldaCodexApi → Cache Redis → ZeldaWeaponsApi (SOAP) → Po
                Inmediata      + Guardar Cache
 ```
 
-## 🔧 Configuración
+## Configuración
 
 ### Docker Compose
 ```yaml
@@ -29,242 +29,289 @@ services:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     command: redis-server --appendonly yes
 ```
 
-### Spring Boot Configuration
-```properties
-# Redis Cache Configuration
-spring.data.redis.host=localhost
-spring.data.redis.port=6379
-spring.data.redis.timeout=2000ms
-spring.cache.type=redis
-spring.cache.redis.time-to-live=600000  # 10 minutos
-
-# Docker Profile
-spring.data.redis.host=redis  # Para contenedores
-```
-
-## 📊 Estrategia de Cache
-
-### Operaciones Cacheadas
-
-| Operación | Cache Key | TTL | Descripción |
-|-----------|-----------|-----|-------------|
-| `GET /weapons/{id}` | `weapons::{id}` | 10 min | Cache individual por ID |
-| `GET /weapons?page=0&size=10` | `weaponsList::{page}_{size}_{filters}` | 10 min | Cache de listados paginados |
-
-### Invalidación de Cache
-
-| Operación | Invalidación | Motivo |
-|-----------|-------------|---------|
-| `POST /weapons` | `weaponsList::*` + `weapons::{newId}` | Nueva arma afecta listados |
-| `PUT /weapons/{id}` | `weapons::{id}` + `weaponsList::*` | Arma modificada |
-| `PATCH /weapons/{id}` | `weapons::{id}` + `weaponsList::*` | Arma modificada |
-| `DELETE /weapons/{id}` | `weapons::{id}` + `weaponsList::*` | Arma eliminada |
-
-## 🚀 Implementación
-
-### WeaponService - Anotaciones de Cache
-
-```java
-@Service
-public class WeaponService {
-    
-    // Cache para consulta individual
-    @Cacheable(value = "weapons", key = "#id")
-    public Weapon getWeaponById(UUID id) {
-        logger.info("Buscando arma con ID {} - Cache MISS", id);
-        return weaponGateway.getWeaponById(id);
-    }
-    
-    // Cache para listados paginados
-    @Cacheable(value = "weaponsList", 
-               key = "#pageable.pageNumber + '_' + #pageable.pageSize + '_' + #filters.toString()")
-    public Page<Weapon> getAllWeapons(Pageable pageable, Map<String, String> filters) {
-        logger.info("Obteniendo lista - Cache MISS");
-        return weaponGateway.getAllWeapons(pageable, filters);
-    }
-    
-    // Invalidación en operaciones de escritura
-    @Caching(evict = {
-        @CacheEvict(value = "weapons", key = "#id"),
-        @CacheEvict(value = "weaponsList", allEntries = true)
-    })
-    public Weapon updateWeapon(UUID id, Weapon weapon) {
-        logger.info("Actualizando arma - Invalidando cache");
-        return weaponGateway.updateWeapon(id, weapon);
-    }
-}
-```
-
-### RedisConfig - Configuración Avanzada
-
+### Spring Boot Configuration (RedisConfig)
 ```java
 @Configuration
 @EnableCaching
 public class RedisConfig {
-    
+
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofMinutes(10))
+    public LettuceConnectionFactory redisConnectionFactory() {
+        return new LettuceConnectionFactory(
+            new RedisStandaloneConfiguration("localhost", 6379)
+        );
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(LettuceConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        
+        // Configurar serialización JSON
+        template.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        
+        return template;
+    }
+
+    @Bean
+    public CacheManager cacheManager(LettuceConnectionFactory redisConnectionFactory) {
+        RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+            .entryTtl(Duration.ofMinutes(10))  // TTL: 10 minutos
             .serializeKeysWith(RedisSerializationContext.SerializationPair
                 .fromSerializer(new StringRedisSerializer()))
             .serializeValuesWith(RedisSerializationContext.SerializationPair
                 .fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
-        return RedisCacheManager.builder(connectionFactory)
-            .cacheDefaults(config)
-            .transactionAware()
+        return RedisCacheManager.builder(redisConnectionFactory)
+            .cacheDefaults(cacheConfig)
             .build();
     }
 }
 ```
 
-## 📈 Métricas y Monitoreo
+### application.properties
+```properties
+# Redis Configuration
+spring.data.redis.host=${REDIS_HOST:localhost}
+spring.data.redis.port=6379
+spring.data.redis.timeout=2000ms
+spring.data.redis.lettuce.pool.max-active=8
+spring.data.redis.lettuce.pool.max-idle=8
+spring.data.redis.lettuce.pool.min-idle=0
+
+# Cache Configuration
+spring.cache.type=redis
+spring.cache.redis.time-to-live=600000  # 10 minutos
+spring.cache.redis.cache-null-values=false
+
+# Para Docker
+spring.profiles.active=${SPRING_PROFILES_ACTIVE:default}
+```
+
+## Estrategia de Cache
+
+### Operaciones Cacheadas
+
+| Operación | Cache Key | TTL | Estrategia |
+|-----------|-----------|-----|------------|
+| `GET /weapons` | `weapons:all` | 10 min | Cache-Aside |
+| `GET /weapons/{id}` | `weapon:{id}` | 10 min | Cache-Aside |
+| `GET /weapons?page={p}&size={s}` | `weapons:page:{p}:size:{s}` | 10 min | Cache-Aside |
+
+### Invalidación de Cache
+
+| Operación | Invalidación |
+|-----------|--------------|
+| `POST /weapons` | Elimina `weapons:all` y claves de paginación |
+| `PUT /weapons/{id}` | Elimina `weapon:{id}`, `weapons:all` y paginación |
+| `PATCH /weapons/{id}` | Elimina `weapon:{id}`, `weapons:all` y paginación |
+| `DELETE /weapons/{id}` | Elimina `weapon:{id}`, `weapons:all` y paginación |
+
+## Implementación
+
+### Anotaciones de Cache en Service
+```java
+@Service
+@Transactional
+public class WeaponService implements IWeaponService {
+
+    @Override
+    @Cacheable(value = "weapons", key = "'all'")
+    public List<WeaponResponse> getAllWeapons() {
+        List<Weapon> weapons = weaponGateway.getAllWeapons();
+        return weapons.stream()
+            .map(this::toWeaponResponse)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Cacheable(value = "weapons", key = "#id.toString()")
+    public WeaponResponse getWeaponById(UUID id) {
+        Optional<Weapon> weapon = weaponGateway.getWeaponById(id);
+        if (weapon.isEmpty()) {
+            throw new WeaponNotFoundException("Weapon not found with ID: " + id);
+        }
+        return toWeaponResponse(weapon.get());
+    }
+
+    @Override
+    @Cacheable(value = "weapons", key = "'page:' + #page + ':size:' + #size")
+    public Page<WeaponResponse> getWeaponsPage(int page, int size) {
+        // Implementación de paginación con cache
+    }
+
+    @Override
+    @CacheEvict(value = "weapons", allEntries = true)
+    public WeaponResponse createWeapon(CreateWeaponRequest request) {
+        Weapon createdWeapon = weaponGateway.createWeapon(request);
+        return toWeaponResponse(createdWeapon);
+    }
+
+    @Override
+    @CacheEvict(value = "weapons", key = "#id.toString()")
+    @CacheEvict(value = "weapons", key = "'all'")
+    public WeaponResponse updateWeapon(UUID id, ReplaceWeaponRequest request) {
+        Weapon updatedWeapon = weaponGateway.updateWeapon(id, request);
+        return toWeaponResponse(updatedWeapon);
+    }
+
+    @Override
+    @CacheEvict(value = "weapons", key = "#id.toString()")
+    @CacheEvict(value = "weapons", key = "'all'")
+    public void deleteWeapon(UUID id) {
+        weaponGateway.deleteWeapon(id);
+    }
+}
+```
+
+### Controller de Cache Info
+```java
+@RestController
+@RequestMapping("/api/v1/cache")
+public class CacheController {
+
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final CacheManager cacheManager;
+
+    @GetMapping("/info")
+    public ResponseEntity<Map<String, Object>> getCacheInfo() {
+        Map<String, Object> cacheInfo = new HashMap<>();
+        
+        // Estadísticas de Redis
+        RedisConnection connection = redisTemplate.getConnectionFactory().getConnection();
+        Properties info = connection.info();
+        
+        cacheInfo.put("redis_version", info.getProperty("redis_version"));
+        cacheInfo.put("used_memory_human", info.getProperty("used_memory_human"));
+        cacheInfo.put("connected_clients", info.getProperty("connected_clients"));
+        cacheInfo.put("total_commands_processed", info.getProperty("total_commands_processed"));
+        
+        // Claves de cache
+        Set<String> keys = redisTemplate.keys("weapon*");
+        cacheInfo.put("cached_weapons", keys != null ? keys.size() : 0);
+        cacheInfo.put("cache_keys", keys);
+        
+        connection.close();
+        return ResponseEntity.ok(cacheInfo);
+    }
+
+    @DeleteMapping("/clear")
+    public ResponseEntity<String> clearCache() {
+        cacheManager.getCacheNames().forEach(cacheName -> 
+            Objects.requireNonNull(cacheManager.getCache(cacheName)).clear());
+        return ResponseEntity.ok("Cache cleared successfully");
+    }
+}
+```
+
+## Monitoreo y Métricas
 
 ### Logs de Cache
-
-```bash
-# Cache HIT (consulta desde Redis)
-2025-10-30 15:30:45 [INFO ] WeaponService - Cache HIT para arma ID: 123e4567...
-
-# Cache MISS (consulta SOAP + guardar en Redis) 
-2025-10-30 15:30:47 [INFO ] WeaponService - Buscando arma con ID 456f7890 - Cache MISS
-2025-10-30 15:30:48 [DEBUG] WeaponService - Arma Master Sword encontrada y guardada en cache
+```properties
+# Logging para cache
+logging.level.org.springframework.cache=DEBUG
+logging.level.org.springframework.data.redis=DEBUG
+logging.level.com.zelda.codex.services=DEBUG
 ```
 
-### Endpoints de Administración
-
-| Endpoint | Método | Descripción |
-|----------|--------|-------------|
-| `/api/v1/cache/info` | GET | Información del cache |
-| `/cache/clear` | DELETE | Limpiar todo el cache |
-| `/cache/clear/{cacheName}` | DELETE | Limpiar cache específico |
-| `/cache/status` | GET | Estado de caches |
-| `/cache/stats` | GET | Estadísticas básicas |
-
-## 🧪 Testing del Cache
-
-### 1. Verificar Cache MISS/HIT
-
+### Métricas de Performance
 ```bash
-# Primera consulta (Cache MISS)
-curl -v http://localhost:8082/api/v1/weapons/123e4567-e89b-12d3-a456-426614174000
-
-# Segunda consulta (Cache HIT - debe ser más rápida)
-curl -v http://localhost:8082/api/v1/weapons/123e4567-e89b-12d3-a456-426614174000
-```
-
-### 2. Verificar Invalidación
-
-```bash
-# 1. Consultar arma (llenar cache)
-curl http://localhost:8082/api/v1/weapons/123e4567-e89b-12d3-a456-426614174000
-
-# 2. Actualizar arma (invalidar cache)
-curl -X PATCH http://localhost:8082/api/v1/weapons/123e4567-e89b-12d3-a456-426614174000 \
-  -H "Content-Type: application/json" \
-  -d '{"damage": 35}'
-
-# 3. Consultar de nuevo (Cache MISS por invalidación)
-curl http://localhost:8082/api/v1/weapons/123e4567-e89b-12d3-a456-426614174000
-```
-
-### 3. Verificar Cache de Listados
-
-```bash
-# Primera consulta de listado (Cache MISS)
-curl "http://localhost:8082/api/v1/weapons?page=0&size=10"
-
-# Segunda consulta idéntica (Cache HIT)
-curl "http://localhost:8082/api/v1/weapons?page=0&size=10"
-
-# Consulta con diferentes parámetros (Cache MISS)
-curl "http://localhost:8082/api/v1/weapons?page=1&size=5"
-```
-
-## 🔍 Monitoreo Redis
-
-### Comandos Redis CLI
-
-```bash
-# Conectar a Redis
+# Conectar a Redis y ver estadísticas
 docker exec -it zelda-redis redis-cli
 
-# Ver todas las claves
-KEYS *
-
-# Ver claves de cache específico
-KEYS weapons::*
-KEYS weaponsList::*
-
-# Ver contenido de una clave
-GET weapons::123e4567-e89b-12d3-a456-426614174000
-
-# Ver TTL de una clave
-TTL weapons::123e4567-e89b-12d3-a456-426614174000
-
-# Estadísticas del servidor
+# Ver información de memoria
 INFO memory
-INFO stats
+
+# Ver claves de cache actuales
+KEYS weapon*
+
+# Ver estadísticas de comandos
+INFO commandstats
+
+# Monitorear comandos en tiempo real
+MONITOR
 ```
 
-### Logs en Tiempo Real
+## Testing
 
+### Verificar Funcionamiento del Cache
 ```bash
-# Ver logs de cache en la aplicación
-docker-compose logs -f zelda-codex-api | grep -i cache
+# 1. Limpiar cache
+curl -X DELETE http://localhost:8082/api/v1/cache/clear
 
-# Monitorear Redis
+# 2. Primera consulta (cache MISS - lenta)
+time curl -H "Authorization: Bearer $READ_TOKEN" \
+  http://localhost:8082/api/v1/weapons
+
+# 3. Segunda consulta (cache HIT - rápida)
+time curl -H "Authorization: Bearer $READ_TOKEN" \
+  http://localhost:8082/api/v1/weapons
+
+# 4. Ver información de cache
+curl http://localhost:8082/api/v1/cache/info
+```
+
+### Verificar Invalidación
+```bash
+# 1. Consultar arma (cache)
+curl -H "Authorization: Bearer $READ_TOKEN" \
+  http://localhost:8082/api/v1/weapons/some-id
+
+# 2. Actualizar arma (invalida cache)
+curl -X PUT -H "Authorization: Bearer $WRITE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Updated Sword","weaponType":"ONE_HANDED_SWORD","damage":35,"durability":45}' \
+  http://localhost:8082/api/v1/weapons/some-id
+
+# 3. Consultar nuevamente (cache MISS)
+curl -H "Authorization: Bearer $READ_TOKEN" \
+  http://localhost:8082/api/v1/weapons/some-id
+```
+
+## Troubleshooting
+
+### Problemas Comunes
+
+**Error: Unable to connect to Redis**
+```bash
+# Verificar que Redis esté ejecutándose
+docker-compose ps redis
+docker exec zelda-redis redis-cli ping
+```
+
+**Cache no se está utilizando**
+```bash
+# Verificar logs de Spring Cache
+docker-compose logs zelda-codex-api | grep -i cache
+
+# Verificar configuración de cache
+curl http://localhost:8082/api/v1/cache/info
+```
+
+**Performance no mejora**
+```bash
+# Verificar que las claves se están creando
+docker exec zelda-redis redis-cli KEYS "*"
+
+# Monitor en tiempo real
 docker exec zelda-redis redis-cli MONITOR
 ```
 
-## 🎯 Beneficios de Performance
+### Configuración de Desarrollo
+```properties
+# Para desarrollo local (sin Docker)
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
 
-### Antes del Cache (SOAP directo)
-- **Latencia promedio**: 200-500ms por consulta
-- **Carga SOAP**: 100% de consultas van al backend
-- **Escalabilidad**: Limitada por capacidad del servicio SOAP
-
-### Después del Cache (Redis)
-- **Latencia Cache HIT**: 5-20ms por consulta  
-- **Latencia Cache MISS**: 200-500ms (primera vez) + cache para siguientes
-- **Reducción de carga SOAP**: 70-90% menos consultas al backend
-- **Escalabilidad**: Mejorada significativamente para consultas repetidas
-
-### Casos de Uso Optimizados
-- ✅ **Consultas frecuentes** del mismo arma
-- ✅ **Listados paginados** repetidos (ej: primera página)
-- ✅ **APIs públicas** con muchos consumidores
-- ✅ **Dashboards** que refrescan datos periódicamente
-
-## 🔧 Configuración Avanzada
-
-### TTL Dinámico por Tipo de Cache
-```java
-@Bean
-public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-    return RedisCacheManager.builder(connectionFactory)
-        .withCacheConfiguration("weapons", 
-            RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(15)))
-        .withCacheConfiguration("weaponsList",
-            RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(5)))
-        .build();
-}
+# Para debugging
+logging.level.org.springframework.cache=TRACE
 ```
-
-### Cache Condicional
-```java
-@Cacheable(value = "weapons", key = "#id", 
-           condition = "#id != null", 
-           unless = "#result == null")
-public Weapon getWeaponById(UUID id) {
-    return weaponGateway.getWeaponById(id);
-}
-```
-
----
-
-Este sistema de cache Redis proporciona una mejora significativa en el performance de la API, especialmente importante cuando se consume un servicio SOAP que puede tener mayor latencia que consultas directas a base de datos.

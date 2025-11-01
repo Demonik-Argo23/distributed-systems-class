@@ -2,14 +2,13 @@
 // Este archivo ha sido generado por Eclipse Implementation of JAXB v3.0.0 
 // Visite https://eclipse-ee4j.github.io/jaxb-ri 
 // Todas las modificaciones realizadas en este archivo se perderán si se vuelve a compilar el esquema de origen. 
-// Generado el: 2025.10.28 a las 06:27:11 PM CST 
+// Generado el: 2025.11.01 a las 12:14:56 AM CST 
 //
 
 
 package com.zelda.weapons.ws;
 
 import jakarta.xml.bind.annotation.XmlEnum;
-import jakarta.xml.bind.annotation.XmlEnumValue;
 import jakarta.xml.bind.annotation.XmlType;
 
 
@@ -20,9 +19,10 @@ import jakarta.xml.bind.annotation.XmlType;
  * <pre>
  * &lt;simpleType name="element"&gt;
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
- *     &lt;enumeration value="Fire"/&gt;
- *     &lt;enumeration value="Ice"/&gt;
- *     &lt;enumeration value="Electric"/&gt;
+ *     &lt;enumeration value="FIRE"/&gt;
+ *     &lt;enumeration value="ICE"/&gt;
+ *     &lt;enumeration value="LIGHTNING"/&gt;
+ *     &lt;enumeration value="NONE"/&gt;
  *   &lt;/restriction&gt;
  * &lt;/simpleType&gt;
  * </pre>
@@ -32,29 +32,17 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum Element {
 
-    @XmlEnumValue("Fire")
-    FIRE("Fire"),
-    @XmlEnumValue("Ice")
-    ICE("Ice"),
-    @XmlEnumValue("Electric")
-    ELECTRIC("Electric");
-    private final String value;
-
-    Element(String v) {
-        value = v;
-    }
+    FIRE,
+    ICE,
+    LIGHTNING,
+    NONE;
 
     public String value() {
-        return value;
+        return name();
     }
 
     public static Element fromValue(String v) {
-        for (Element c: Element.values()) {
-            if (c.value.equals(v)) {
-                return c;
-            }
-        }
-        throw new IllegalArgumentException(v);
+        return valueOf(v);
     }
 
 }

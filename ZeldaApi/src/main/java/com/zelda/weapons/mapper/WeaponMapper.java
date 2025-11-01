@@ -13,7 +13,7 @@ public class WeaponMapper {
         com.zelda.weapons.ws.Weapon soapWeapon = new com.zelda.weapons.ws.Weapon();
         soapWeapon.setId(entityWeapon.getId().toString());
         soapWeapon.setName(entityWeapon.getName());
-        soapWeapon.setType(mapWeaponTypeToSoap(entityWeapon.getWeaponType()));
+        soapWeapon.setWeaponType(mapWeaponTypeToSoap(entityWeapon.getWeaponType()));
         soapWeapon.setDamage(entityWeapon.getDamage());
         soapWeapon.setDurability(entityWeapon.getDurability());
         soapWeapon.setElement(mapElementToSoap(entityWeapon.getElement()));
@@ -28,7 +28,7 @@ public class WeaponMapper {
 
         com.zelda.weapons.model.Weapon entityWeapon = new com.zelda.weapons.model.Weapon();
         entityWeapon.setName(weaponInput.getName());
-        entityWeapon.setWeaponType(mapWeaponTypeToEntity(weaponInput.getType()));
+        entityWeapon.setWeaponType(mapWeaponTypeToEntity(weaponInput.getWeaponType()));
         entityWeapon.setDamage(weaponInput.getDamage());
         entityWeapon.setDurability(weaponInput.getDurability());
         entityWeapon.setElement(mapElementToEntity(weaponInput.getElement()));
@@ -42,15 +42,11 @@ public class WeaponMapper {
         }
 
         return switch (entityType) {
-            case Bat -> com.zelda.weapons.ws.WeaponType.BAT;
-            case Boomerang -> com.zelda.weapons.ws.WeaponType.BOOMERANG;
-            case Club -> com.zelda.weapons.ws.WeaponType.CLUB;
-            case Hammer -> com.zelda.weapons.ws.WeaponType.HAMMER;
-            case Rod -> com.zelda.weapons.ws.WeaponType.ROD;
-            case Spear -> com.zelda.weapons.ws.WeaponType.SPEAR;
-            case OneHandedSword -> com.zelda.weapons.ws.WeaponType.ONE_HANDED_SWORD;
-            case TwoHandedSword -> com.zelda.weapons.ws.WeaponType.TWO_HANDED_SWORD;
-            case Other -> com.zelda.weapons.ws.WeaponType.OTHER;
+            case ONE_HANDED_SWORD -> com.zelda.weapons.ws.WeaponType.ONE_HANDED_SWORD;
+            case TWO_HANDED_SWORD -> com.zelda.weapons.ws.WeaponType.TWO_HANDED_SWORD;
+            case SPEAR -> com.zelda.weapons.ws.WeaponType.SPEAR;
+            case BOW -> com.zelda.weapons.ws.WeaponType.BOW;
+            case SHIELD -> com.zelda.weapons.ws.WeaponType.SHIELD;
         };
     }
 
@@ -60,15 +56,11 @@ public class WeaponMapper {
         }
 
         return switch (soapType) {
-            case BAT -> com.zelda.weapons.enums.WeaponType.Bat;
-            case BOOMERANG -> com.zelda.weapons.enums.WeaponType.Boomerang;
-            case CLUB -> com.zelda.weapons.enums.WeaponType.Club;
-            case HAMMER -> com.zelda.weapons.enums.WeaponType.Hammer;
-            case ROD -> com.zelda.weapons.enums.WeaponType.Rod;
-            case SPEAR -> com.zelda.weapons.enums.WeaponType.Spear;
-            case ONE_HANDED_SWORD -> com.zelda.weapons.enums.WeaponType.OneHandedSword;
-            case TWO_HANDED_SWORD -> com.zelda.weapons.enums.WeaponType.TwoHandedSword;
-            case OTHER -> com.zelda.weapons.enums.WeaponType.Other;
+            case ONE_HANDED_SWORD -> com.zelda.weapons.enums.WeaponType.ONE_HANDED_SWORD;
+            case TWO_HANDED_SWORD -> com.zelda.weapons.enums.WeaponType.TWO_HANDED_SWORD;
+            case SPEAR -> com.zelda.weapons.enums.WeaponType.SPEAR;
+            case BOW -> com.zelda.weapons.enums.WeaponType.BOW;
+            case SHIELD -> com.zelda.weapons.enums.WeaponType.SHIELD;
         };
     }
 
@@ -78,9 +70,10 @@ public class WeaponMapper {
         }
 
         return switch (entityElement) {
-            case Fire -> com.zelda.weapons.ws.Element.FIRE;
-            case Ice -> com.zelda.weapons.ws.Element.ICE;
-            case Electric -> com.zelda.weapons.ws.Element.ELECTRIC;
+            case FIRE -> com.zelda.weapons.ws.Element.FIRE;
+            case ICE -> com.zelda.weapons.ws.Element.ICE;
+            case LIGHTNING -> com.zelda.weapons.ws.Element.LIGHTNING;
+            case NONE -> com.zelda.weapons.ws.Element.NONE;
         };
     }
 
@@ -90,9 +83,10 @@ public class WeaponMapper {
         }
 
         return switch (soapElement) {
-            case FIRE -> com.zelda.weapons.enums.Element.Fire;
-            case ICE -> com.zelda.weapons.enums.Element.Ice;
-            case ELECTRIC -> com.zelda.weapons.enums.Element.Electric;
+            case FIRE -> com.zelda.weapons.enums.Element.FIRE;
+            case ICE -> com.zelda.weapons.enums.Element.ICE;
+            case LIGHTNING -> com.zelda.weapons.enums.Element.LIGHTNING;
+            case NONE -> com.zelda.weapons.enums.Element.NONE;
         };
     }
 }

@@ -2,7 +2,7 @@
 // Este archivo ha sido generado por Eclipse Implementation of JAXB v3.0.0 
 // Visite https://eclipse-ee4j.github.io/jaxb-ri 
 // Todas las modificaciones realizadas en este archivo se perderán si se vuelve a compilar el esquema de origen. 
-// Generado el: 2025.10.28 a las 06:27:11 PM CST 
+// Generado el: 2025.11.01 a las 12:14:56 AM CST 
 //
 
 
@@ -25,7 +25,7 @@ import jakarta.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="weapon" type="{http://weapons.zelda.com/ws}weaponInput"/&gt;
+ *         &lt;element name="weaponInput" type="{http://zelda.com/weapons}weaponInput"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -36,36 +36,36 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "weapon"
+    "weaponInput"
 })
 @XmlRootElement(name = "createWeaponRequest")
 public class CreateWeaponRequest {
 
     @XmlElement(required = true)
-    protected WeaponInput weapon;
+    protected WeaponInput weaponInput;
 
     /**
-     * Obtiene el valor de la propiedad weapon.
+     * Obtiene el valor de la propiedad weaponInput.
      * 
      * @return
      *     possible object is
      *     {@link WeaponInput }
      *     
      */
-    public WeaponInput getWeapon() {
-        return weapon;
+    public WeaponInput getWeaponInput() {
+        return weaponInput;
     }
 
     /**
-     * Define el valor de la propiedad weapon.
+     * Define el valor de la propiedad weaponInput.
      * 
      * @param value
      *     allowed object is
      *     {@link WeaponInput }
      *     
      */
-    public void setWeapon(WeaponInput value) {
-        this.weapon = value;
+    public void setWeaponInput(WeaponInput value) {
+        this.weaponInput = value;
     }
 
 }
