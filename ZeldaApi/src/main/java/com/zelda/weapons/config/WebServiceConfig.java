@@ -29,7 +29,7 @@ public class WebServiceConfig extends WsConfigurerAdapter {
         DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
         wsdl11Definition.setPortTypeName("WeaponsPort");
         wsdl11Definition.setLocationUri("/ws");
-        wsdl11Definition.setTargetNamespace("http://weapons.zelda.com/ws");
+        wsdl11Definition.setTargetNamespace("http://zelda.com/weapons");
         wsdl11Definition.setSchema(weaponsSchema);
         return wsdl11Definition;
     }

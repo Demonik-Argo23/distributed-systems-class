@@ -1,0 +1,103 @@
+services:
+  zelda-codex-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - ZELDA_WEAPONS_SOAP_URL=http://zelda-weapons-api:8081/ws
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      - zelda-weapons-api
+      - redis
+      - hydra
+    networks:
+      - zelda-network
+
+  zelda-weapons-api:
+    build:
+      context: ../ZeldaApi
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/zelda_weapons_db
+      - SPRING_DATASOURCE_USERNAME=zelda_user
+      - SPRING_DATASOURCE_PASSWORD=zelda_pass
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zelda-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: zelda-postgres
+    environment:
+      POSTGRES_DB: zelda_weapons_db
+      POSTGRES_USER: zelda_user
+      POSTGRES_PASSWORD: zelda_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zelda-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zelda_user -d zelda_weapons_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: zelda-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - zelda-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  hydra:
+    image: oryd/hydra:v2.2.0
+    container_name: zelda-hydra
+    ports:
+      - "4444:4444"
+      - "4445:4445"
+    environment:
+      - DSN=memory
+      - URLS_SELF_ISSUER=http://hydra:4444/
+      - URLS_SELF_PUBLIC=http://localhost:4444/
+      - URLS_CONSENT=http://localhost:3000/consent
+      - URLS_LOGIN=http://localhost:3000/login
+      - SECRETS_SYSTEM=youReallyNeedToChangeThis
+      - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
+      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
+      - STRATEGIES_ACCESS_TOKEN=jwt
+      - OAUTH2_ACCESS_TOKEN_STRATEGY=jwt
+      - TTL_ACCESS_TOKEN=1h
+      - TTL_REFRESH_TOKEN=720h
+      - OAUTH2_EXPOSE_INTERNAL_ERRORS=true
+    command: serve all --dev
+    networks:
+      - zelda-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  zelda-network:
+    driver: bridge

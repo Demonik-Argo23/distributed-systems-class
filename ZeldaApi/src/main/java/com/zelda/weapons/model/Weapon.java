@@ -1,5 +1,9 @@
 package com.zelda.weapons.model;
 
+import java.util.UUID;
+
+import org.hibernate.annotations.GenericGenerator;
+
 import com.zelda.weapons.enums.Element;
 import com.zelda.weapons.enums.WeaponType;
 
@@ -8,7 +12,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
@@ -20,8 +23,10 @@ import jakarta.validation.constraints.NotNull;
 public class Weapon {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
     
     @NotBlank(message = "El nombre del arma es obligatorio")
     @Column(name = "Name", nullable = false, length = 100)
@@ -57,11 +62,11 @@ public class Weapon {
         this.element = element;
     }
     
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
     
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
     
