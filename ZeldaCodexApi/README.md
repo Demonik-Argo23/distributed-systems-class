@@ -18,8 +18,65 @@ docker-compose up --build
 ```
 
 ### Paso 2: Configurar clientes OAuth2 (después de 2-3 minutos)
+
+**Opción A - Script automatizado (recomendado):**
 ```bash
-./setup-oauth-clients.sh
+# En sistemas Unix/Linux/Mac
+./setup-oauth-clients-fixed.sh
+
+# En Windows con Git Bash o WSL
+bash setup-oauth-clients-fixed.sh
+```
+
+**Opción B - Comandos manuales (si el script falla):**
+```bash
+# Esperar a que Hydra esté listo
+curl http://localhost:4445/health/ready
+
+# Crear cliente principal
+curl -X POST http://localhost:4445/admin/clients \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "zelda-api-client",
+    "client_name": "Zelda Codex API Client",
+    "client_secret": "zelda-secret-2024",
+    "grant_types": ["client_credentials"],
+    "response_types": ["token"],
+    "scope": "read write",
+    "token_endpoint_auth_method": "client_secret_basic",
+    "access_token_strategy": "jwt"
+  }'
+
+# Crear cliente de testing (opcional)
+curl -X POST http://localhost:4445/admin/clients \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "zelda-codex-client",
+    "client_name": "Zelda Codex Test Client",
+    "client_secret": "zelda-codex-secret",
+    "grant_types": ["client_credentials"],
+    "response_types": ["token"],
+    "scope": "weapons:read weapons:write",
+    "token_endpoint_auth_method": "client_secret_basic",
+    "access_token_strategy": "jwt"
+  }'
+```
+
+**Opción C - PowerShell (Windows):**
+```powershell
+# Crear cliente principal
+$body = @{
+    client_id = "zelda-api-client"
+    client_name = "Zelda Codex API Client"
+    client_secret = "zelda-secret-2024"
+    grant_types = @("client_credentials")
+    response_types = @("token")
+    scope = "read write"
+    token_endpoint_auth_method = "client_secret_basic"
+    access_token_strategy = "jwt"
+} | ConvertTo-Json
+
+Invoke-WebRequest -Uri "http://localhost:4445/admin/clients" -Method POST -Headers @{"Content-Type"="application/json"} -Body $body
 ```
 
 El sistema estará completamente operativo después del Paso 2. Los servicios se inicializan automáticamente con datos de prueba y configuración OAuth2.
@@ -188,6 +245,42 @@ Content-Type: application/json
 DELETE http://localhost:8082/api/v1/weapons/{id}
 Authorization: Bearer [token_jwt]
 ```
+
+## Troubleshooting
+
+### Problemas con el Script de OAuth2
+
+**Error: "command not found" o caracteres extraños**
+- **Causa**: Caracteres de fin de línea incorrectos (Windows vs Unix)
+- **Solución**: Usar `setup-oauth-clients-fixed.sh` o comandos manuales
+
+**Error: "Client already exists"**
+- **Causa**: Los clientes ya fueron creados previamente
+- **Solución**: Normal, el sistema funcionará correctamente
+
+**Error: "Connection refused" en puerto 4445**
+- **Causa**: Hydra no ha terminado de iniciarse
+- **Solución**: Esperar 2-3 minutos más y reintentar
+
+**Error de permisos en script**
+```bash
+chmod +x setup-oauth-clients-fixed.sh
+./setup-oauth-clients-fixed.sh
+```
+
+### Verificar configuración OAuth2
+```bash
+# Verificar que el cliente fue creado
+curl -X GET http://localhost:4445/admin/clients/zelda-api-client
+
+# Probar obtención de token
+curl -X POST http://localhost:4444/oauth2/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials&scope=read write" \
+  -u "zelda-api-client:zelda-secret-2024"
+```
+
+Si el token retornado empieza con "eyJ", la configuración JWT está correcta.
 
 ## Verificación del Sistema
 

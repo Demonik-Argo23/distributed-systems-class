@@ -1,7 +1,9 @@
 package com.zelda.codex.config;
 
-import com.zelda.codex.exceptions.*;
-import com.zelda.codex.dtos.ErrorResponse;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,9 +12,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.ws.soap.client.SoapFaultClientException;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import com.zelda.codex.dtos.ErrorResponse;
+import com.zelda.codex.exceptions.SoapServiceException;
+import com.zelda.codex.exceptions.SoapServiceUnavailableException;
+import com.zelda.codex.exceptions.SoapValidationException;
+import com.zelda.codex.exceptions.WeaponAlreadyExistsException;
+import com.zelda.codex.exceptions.WeaponNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -106,6 +111,38 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setStatus(400);
+        error.setError("Bad Request");
+        error.setMessage("Formato de parámetro inválido: " + ex.getName() + " debe ser de tipo " + ex.getRequiredType().getSimpleName());
+        error.setTimestamp(LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(
+            org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setStatus(400);
+        error.setError("Bad Request");
+        error.setMessage("Parámetro requerido faltante: " + ex.getParameterName());
+        error.setTimestamp(LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(org.springframework.security.access.AccessDeniedException ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setStatus(403);
+        error.setError("Access Denied");
+        error.setMessage("No tienes permisos para acceder a este recurso. Verifica que tu token tenga los scopes necesarios.");
+        error.setTimestamp(LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
     /**
      * Manejo genérico de excepciones no capturadas
      */
@@ -114,8 +151,12 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse();
         error.setStatus(500);
         error.setError("Internal Server Error");
-        error.setMessage("Error interno del servidor: " + ex.getMessage());
+        error.setMessage("Error interno del servidor. Contacta al administrador si el problema persiste.");
         error.setTimestamp(LocalDateTime.now());
+        
+        // Log del error para debugging
+        System.err.println("Excepción no capturada: " + ex.getClass().getName() + " - " + ex.getMessage());
+        ex.printStackTrace();
         
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }

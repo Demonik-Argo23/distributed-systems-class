@@ -27,6 +27,7 @@ public class WeaponService {
 
     public Weapon createWeapon(@Valid Weapon weapon) {
         weaponValidator.validateWeaponData(weapon);
+        weaponValidator.validateUniqueWeaponName(weapon);
         weapon.setId(null);
         return weaponRepository.save(weapon);
     }

@@ -11,6 +11,7 @@ import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 import com.zelda.weapons.mapper.WeaponMapper;
 import com.zelda.weapons.model.Weapon;
 import com.zelda.weapons.service.WeaponService;
+import com.zelda.weapons.validator.WeaponAlreadyExistsException;
 import com.zelda.weapons.ws.CreateWeaponRequest;
 import com.zelda.weapons.ws.CreateWeaponResponse;
 import com.zelda.weapons.ws.DeleteWeaponRequest;
@@ -47,13 +48,19 @@ public class WeaponEndpoint {
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "createWeaponRequest")
     @ResponsePayload
     public CreateWeaponResponse createWeapon(@RequestPayload CreateWeaponRequest request) {
-        Weapon weaponEntity = weaponMapper.soapInputToEntity(request.getWeaponInput());
-        Weapon createdWeapon = weaponService.createWeapon(weaponEntity);
-        com.zelda.weapons.ws.Weapon weaponSoap = weaponMapper.entityToSoap(createdWeapon);
-        
-        CreateWeaponResponse response = new CreateWeaponResponse();
-        response.setWeapon(weaponSoap);
-        return response;
+        try {
+            Weapon weaponEntity = weaponMapper.soapInputToEntity(request.getWeaponInput());
+            Weapon createdWeapon = weaponService.createWeapon(weaponEntity);
+            com.zelda.weapons.ws.Weapon weaponSoap = weaponMapper.entityToSoap(createdWeapon);
+            
+            CreateWeaponResponse response = new CreateWeaponResponse();
+            response.setWeapon(weaponSoap);
+            return response;
+            
+        } catch (WeaponAlreadyExistsException ex) {
+            // El REST API busca este texto específico para identificar armas duplicadas
+            throw new RuntimeException("ALREADY_EXISTS: " + ex.getMessage());
+        }
     }
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "deleteWeaponRequest")

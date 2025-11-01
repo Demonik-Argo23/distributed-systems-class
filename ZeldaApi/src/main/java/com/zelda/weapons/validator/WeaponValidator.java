@@ -2,12 +2,21 @@ package com.zelda.weapons.validator;
 
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.zelda.weapons.model.Weapon;
+import com.zelda.weapons.repository.WeaponRepository;
 
 @Component
 public class WeaponValidator {
+
+    private final WeaponRepository weaponRepository;
+
+    @Autowired
+    public WeaponValidator(WeaponRepository weaponRepository) {
+        this.weaponRepository = weaponRepository;
+    }
 
     public void validateWeaponId(UUID weaponId) {
         if (weaponId == null) {
@@ -46,6 +55,12 @@ public class WeaponValidator {
 
         if (weapon.getName().length() > 50) {
             throw new WeaponValidationException("El nombre del arma no puede tener más de 50 caracteres");
+        }
+    }
+
+    public void validateUniqueWeaponName(Weapon weapon) {
+        if (weapon.getName() != null && weaponRepository.existsByNameIgnoreCase(weapon.getName())) {
+            throw new WeaponAlreadyExistsException("Ya existe un arma con el nombre: " + weapon.getName());
         }
     }
 }
