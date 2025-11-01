@@ -13,6 +13,7 @@ services:
     depends_on:
       - zelda-weapons-api
       - redis
+      - hydra
     networks:
       - zelda-network
 
@@ -67,6 +68,31 @@ services:
       timeout: 5s
       retries: 5
     command: redis-server --appendonly yes
+
+  hydra:
+    image: oryd/hydra:v2.2.0
+    container_name: zelda-hydra
+    ports:
+      - "4444:4444"
+      - "4445:4445"
+    environment:
+      - DSN=memory
+      - URLS_SELF_ISSUER=http://hydra:4444/
+      - URLS_SELF_PUBLIC=http://localhost:4444/
+      - URLS_CONSENT=http://localhost:3000/consent
+      - URLS_LOGIN=http://localhost:3000/login
+      - SECRETS_SYSTEM=youReallyNeedToChangeThis
+      - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
+      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
+      - STRATEGIES_ACCESS_TOKEN=jwt
+      - OAUTH2_ACCESS_TOKEN_STRATEGY=jwt
+      - TTL_ACCESS_TOKEN=1h
+      - TTL_REFRESH_TOKEN=720h
+      - OAUTH2_EXPOSE_INTERNAL_ERRORS=true
+    command: serve all --dev
+    networks:
+      - zelda-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

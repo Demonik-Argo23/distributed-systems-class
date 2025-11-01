@@ -1,32 +1,43 @@
 # Zelda Weapons Management System
 
-Sistema de gestión de armas de Zelda implementado con arquitectura de microservicios. Incluye API REST Gateway, servicio SOAP backend, cache distribuido Redis y base de datos PostgreSQL.
+Sistema de gestión de armas de Zelda implementado con arquitectura de microservicios. Incluye API REST Gateway con autenticación OAuth2 JWT, servicio SOAP backend, cache distribuido Redis y base de datos PostgreSQL.
 
 ## Requisitos del Sistema
 
 - Docker Desktop instalado y ejecutándose
 - Docker Compose V2 o superior
-- Puertos disponibles: 8081, 8082, 5432, 6379
+- Puertos disponibles: 4444, 4445, 5432, 6379, 8081, 8082
+- Postman o herramienta similar para pruebas de API
 
 ## Inicio del Sistema
 
-Para levantar todos los servicios ejecutar:
-
+### Paso 1: Levantar los servicios
 ```bash
 cd ZeldaCodexApi
 docker-compose up --build
 ```
 
-El sistema estará completamente operativo en aproximadamente 2-3 minutos. Los servicios se inicializan automáticamente con datos de prueba.
+### Paso 2: Configurar clientes OAuth2 (después de 2-3 minutos)
+```bash
+./setup-oauth-clients.sh
+```
+
+El sistema estará completamente operativo después del Paso 2. Los servicios se inicializan automáticamente con datos de prueba y configuración OAuth2.
 
 ## Arquitectura de Microservicios
 
+### ORY Hydra - Servidor OAuth2 (Puertos 4444/4445)
+- Servidor OAuth2 que genera tokens JWT
+- Puerto 4444: API pública para obtener tokens
+- Puerto 4445: API administrativa para gestionar clientes
+- Configurado para estrategia de tokens JWT
+
 ### ZeldaCodexApi - API REST Gateway (Puerto 8082)
-- Implementa API REST con patrón HATEOAS
+- Implementa API REST con patrón HATEOAS y autenticación OAuth2 JWT
 - Actúa como gateway hacia el servicio SOAP backend
 - Integra cache Redis para optimización de rendimiento
-- Maneja validaciones de entrada y respuestas estructuradas
-- Proporciona operaciones CRUD completas
+- Maneja validaciones de entrada y autorización por scopes
+- Proporciona operaciones CRUD completas protegidas
 
 ### ZeldaApi - Servicio SOAP Backend (Puerto 8081)  
 - Servicio SOAP que expone operaciones de gestión de armas
@@ -51,23 +62,59 @@ El sistema estará completamente operativo en aproximadamente 2-3 minutos. Los s
 
 | Servicio | Puerto | Descripción |
 |----------|--------|-------------|
+| Hydra OAuth2 | 4444/4445 | Servidor de autenticación JWT |
 | ZeldaCodexApi | 8082 | API REST Gateway |
 | ZeldaApi | 8081 | Servicio SOAP Backend |
 | PostgreSQL | 5432 | Base de datos principal |
 | Redis | 6379 | Cache distribuido |
 
+## Autenticación OAuth2
+
+### Configuración de Cliente OAuth2
+- Client ID: `zelda-api-client`
+- Client Secret: `zelda-secret-2024`
+- Grant Type: `client_credentials`
+- Scopes disponibles: `read`, `write`
+- Token URL: `http://localhost:4444/oauth2/token`
+
+### Obtener Token JWT en Postman
+
+1. **Crear request POST**:
+   - URL: `http://localhost:4444/oauth2/token`
+   - Method: `POST`
+
+2. **Configurar Authorization**:
+   - Type: `Basic Auth`
+   - Username: `zelda-api-client`
+   - Password: `zelda-secret-2024`
+
+3. **Configurar Body**:
+   - Type: `x-www-form-urlencoded`
+   - Key: `grant_type`, Value: `client_credentials`
+   - Key: `scope`, Value: `read write`
+
+4. **Enviar request** - Debería retornar token JWT que empieza con `eyJ`
+
+5. **Usar token** en requests posteriores:
+   - Authorization Type: `Bearer Token`
+   - Token: `[token_obtenido]`
+
 ## Endpoints de la API REST
 
 ### Base URL: http://localhost:8082/api/v1/weapons
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | /weapons | Listar todas las armas (paginado) |
-| GET | /weapons/{id} | Obtener arma por ID |
-| POST | /weapons | Crear nueva arma |
-| PUT | /weapons/{id} | Actualizar arma completa |
-| PATCH | /weapons/{id} | Actualización parcial |
-| DELETE | /weapons/{id} | Eliminar arma |
+| Método | Endpoint | Descripción | Scope Requerido |
+|--------|----------|-------------|-----------------|
+| GET | /weapons | Listar todas las armas (paginado) | read |
+| GET | /weapons/{id} | Obtener arma por ID | read |
+| POST | /weapons | Crear nueva arma | write |
+| PUT | /weapons/{id} | Actualizar arma completa | write |
+| PATCH | /weapons/{id} | Actualización parcial | write |
+| DELETE | /weapons/{id} | Eliminar arma | write |
+
+### Endpoints Públicos (sin autenticación)
+- `GET /swagger-ui.html` - Documentación Swagger
+- `GET /actuator/health` - Estado del servicio
 
 ## Modelo de Datos
 
@@ -101,16 +148,19 @@ El sistema estará completamente operativo en aproximadamente 2-3 minutos. Los s
 ### Listar todas las armas
 ```bash
 GET http://localhost:8082/api/v1/weapons
+Authorization: Bearer [token_jwt]
 ```
 
 ### Obtener arma específica
 ```bash
 GET http://localhost:8082/api/v1/weapons/550e8400-e29b-41d4-a716-446655440001
+Authorization: Bearer [token_jwt]
 ```
 
 ### Crear nueva arma
 ```bash
 POST http://localhost:8082/api/v1/weapons
+Authorization: Bearer [token_jwt]
 Content-Type: application/json
 
 {
@@ -125,6 +175,7 @@ Content-Type: application/json
 ### Actualización parcial (PATCH)
 ```bash
 PATCH http://localhost:8082/api/v1/weapons/{id}
+Authorization: Bearer [token_jwt]
 Content-Type: application/json
 
 {
@@ -135,6 +186,7 @@ Content-Type: application/json
 ### Eliminar arma
 ```bash
 DELETE http://localhost:8082/api/v1/weapons/{id}
+Authorization: Bearer [token_jwt]
 ```
 
 ## Verificación del Sistema
@@ -143,11 +195,30 @@ DELETE http://localhost:8082/api/v1/weapons/{id}
 ```bash
 docker-compose ps
 ```
+Todos los servicios deben mostrar estado "Up".
+
+### Verificar Hydra OAuth2
+```bash
+curl http://localhost:4445/health/ready
+```
+Debe retornar: `{"status":"ok"}`
+
+### Verificar API Gateway
+```bash
+curl http://localhost:8082/swagger-ui.html
+```
+Debe retornar página HTML de Swagger.
 
 ### Verificar base de datos
 ```bash
 docker exec -it zelda-postgres psql -U zelda_user -d zelda_weapons_db -c "SELECT COUNT(*) FROM weapons;"
 ```
+Debe retornar: `count: 50`
+
+### Prueba completa de autenticación
+1. Obtener token JWT de Hydra
+2. Usar token en request a API Gateway
+3. Verificar que se obtienen datos de armas
 
 ## Datos Iniciales
 
@@ -160,6 +231,8 @@ El sistema incluye 50 armas predefinidas con IDs fijos para facilitar las prueba
 ## Tecnologías Implementadas
 
 - Java 17 + Spring Boot 3.1.0
+- Spring Security OAuth2 Resource Server con JWT
+- ORY Hydra como servidor OAuth2/OpenID Connect
 - SOAP Web Services con JAXB
 - PostgreSQL 15 con Flyway migrations
 - Redis 7 para caching distribuido
