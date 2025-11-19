@@ -1,6 +1,8 @@
+using Grpc.Core;
 using PokedexApi.Exceptions;
 using PokedexApi.Models;
-
+using System.Runtime.CompilerServices;
+using Google.Protobuf.Collections;
 
 namespace PokedexApi.Gateways;
 
@@ -20,16 +22,100 @@ public class TrainerGateway : ITrainerGateway
             var trainer = await _client.GetTrainerByIdAsync(new TrainerByIdRequest { Id = id }, cancellationToken: cancellationToken);
             return ToModel(trainer);
         }
-        catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
             throw new TrainerNotFoundException(id);
         }
-        catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Unavailable)
+
+    }
+
+    public async Task DeleteAsync(string id, CancellationToken cancellationToken)
+    {
+        try
         {
-            throw new InvalidOperationException($"TrainerService is unavailable. Please check if the service is running. Error: {ex.Status.Detail}", ex);
+            await _client.DeleteTrainerAsync(new TrainerByIdRequest { Id = id },
+            cancellationToken: cancellationToken);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new TrainerNotFoundException(id);
+
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.InvalidArgument)
+        {
+            throw new TrainerInvalidException(id);
         }
     }
 
+    public async Task UpdateAsync(Trainer trainer, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var request = new UpdateTrainerRequest
+            {
+                Id = trainer.Id,
+                Name = trainer.Name,
+                Age = trainer.Age,
+                Birthdate = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(trainer.BirthDate),
+                Medals = { trainer.Medals.Select(m => new Medal
+                {
+                    Region = m.Region,
+                    Type = (PokedexApi.MedalType)m.Type,
+                }) }
+            };
+
+            await _client.UpdateTrainerAsync(request, cancellationToken: cancellationToken);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new TrainerNotFoundException(trainer.Id);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.AlreadyExists)
+        {
+            throw new TrainerAlreadyExistsException(trainer.Id);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.InvalidArgument)
+        {
+            throw new TrainerValidationException("Trainer must be over 18 years old.");
+        }
+    }
+
+    public async IAsyncEnumerable<Trainer> GetTrainersByName(string name, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var request = new TrainersByNameRequest { Name = name };
+        using var call = _client.GetAllTrainersByName(request, cancellationToken: cancellationToken);
+        while (await call.ResponseStream.MoveNext(cancellationToken))
+        {
+            yield return ToModel(call.ResponseStream.Current);
+        }
+    }
+
+    public async Task<(int SuccesCount, IList<Trainer> CreatedTrainers)> CreateTrainersBulk(IEnumerable<Trainer> trainers, CancellationToken cancellationToken)
+    {
+        using var call = _client.CreateTrainers(cancellationToken: cancellationToken);
+        foreach (var trainer in trainers)
+        {
+            var request = new CreateTrainerRequest
+            {
+                Name = trainer.Name,
+                Age = trainer.Age,
+                Birthdate = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(trainer.BirthDate),
+                Medals = { trainer.Medals.Select(m => new Medal
+                {
+                    Region = m.Region,
+                    Type = (PokedexApi.MedalType)m.Type,
+                }) }
+            };
+
+            await call.RequestStream.WriteAsync(request, cancellationToken);
+        }
+
+        await call.RequestStream.CompleteAsync();
+        var response = await call.ResponseAsync;
+
+        return (response.SuccessCount, ToModel(response.Trainers));
+    }
 
     private static Trainer ToModel(TrainerResponse trainerResponse)
     {
@@ -40,7 +126,7 @@ public class TrainerGateway : ITrainerGateway
             Age = trainerResponse.Age,
             BirthDate = trainerResponse.Birthdate.ToDateTime(),
             CreatedAt = trainerResponse.CreatedAt.ToDateTime(),
-            Medals = trainerResponse.Medals.Select(m => ToModel(m)).ToList()
+            Medals = trainerResponse.Medals.Select(ToModel).ToList()
         };
     }
 
@@ -49,7 +135,12 @@ public class TrainerGateway : ITrainerGateway
         return new Models.Medal
         {
             Region = medal.Region,
-            Type = (MedalType)medal.Type
+            Type = (MedalType)(int)medal.Type
         };
+    }
+
+    private static IList<Trainer> ToModel(RepeatedField<TrainerResponse> trainerResponse)
+    {
+        return trainerResponse.Select(ToModel).ToList();
     }
 }
