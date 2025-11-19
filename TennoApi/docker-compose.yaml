@@ -1,0 +1,35 @@
+services:
+  tenno-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDB__ConnectionString=mongodb://admin:password@mongodb:27017
+      - MongoDB__DatabaseName=WarframeDb
+      - MongoDB__TennoCollectionName=Tennos
+    depends_on:
+      - mongodb
+    networks:
+      - tenno-network
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - tenno-network
+    
+volumes:
+  mongo-data:
+    
+networks:
+  tenno-network:
+    driver: bridge
