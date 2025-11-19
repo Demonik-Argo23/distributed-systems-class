@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package trainerpb;
 
-option csharp_namespace = "TrainerApi";
+option csharp_namespace = "PokedexApi";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
