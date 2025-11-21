@@ -1,5 +1,7 @@
 package com.zelda.weapons.service;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,19 +27,20 @@ public class WeaponService {
 
     public Weapon createWeapon(@Valid Weapon weapon) {
         weaponValidator.validateWeaponData(weapon);
+        weaponValidator.validateUniqueWeaponName(weapon);
         weapon.setId(null);
         return weaponRepository.save(weapon);
     }
 
     @Transactional(readOnly = true)
-    public Weapon getWeaponById(Long id) {
+    public Weapon getWeaponById(UUID id) {
         weaponValidator.validateWeaponId(id);
 
         return weaponRepository.findById(id)
                 .orElseThrow(() -> new WeaponNotFoundException("Arma con ID " + id + " no encontrada"));
     }
 
-    public boolean deleteWeapon(Long id) {
+    public boolean deleteWeapon(UUID id) {
         weaponValidator.validateWeaponId(id);
 
         if (!weaponRepository.existsById(id)) {

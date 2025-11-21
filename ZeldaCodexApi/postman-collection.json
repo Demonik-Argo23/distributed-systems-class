@@ -1,0 +1,284 @@
+{
+  "info": {
+    "name": "Zelda Codex API - OAuth2 JWT",
+    "description": "Colección para probar la API de Zelda con autenticación JWT OAuth2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "tokenName",
+        "value": "Zelda API Token",
+        "type": "string"
+      },
+      {
+        "key": "clientSecret",
+        "value": "zelda-secret-2024",
+        "type": "string"
+      },
+      {
+        "key": "clientId",
+        "value": "zelda-api-client",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "http://localhost:4444/oauth2/token",
+        "type": "string"
+      },
+      {
+        "key": "scope",
+        "value": "read write",
+        "type": "string"
+      },
+      {
+        "key": "grant_type",
+        "value": "client_credentials",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "OAuth2 - Get Token (Manual)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "zelda-api-client",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "zelda-secret-2024",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials",
+              "type": "text"
+            },
+            {
+              "key": "scope",
+              "value": "read write",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:4444/oauth2/token",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4444",
+          "path": [
+            "oauth2",
+            "token"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET - List All Weapons",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/api/v1/weapons?page=0&pageSize=10",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "api",
+            "v1",
+            "weapons"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "pageSize",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "POST - Create Weapon",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"Postman Master Sword\",\n    \"weaponType\": \"ONE_HANDED_SWORD\",\n    \"damage\": 50,\n    \"durability\": 200,\n    \"element\": \"LIGHT\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8082/api/v1/weapons",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "api",
+            "v1",
+            "weapons"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET - Get Weapon by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/api/v1/weapons/{{weapon_id}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "api",
+            "v1",
+            "weapons",
+            "{{weapon_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "PUT - Replace Weapon",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"Updated Postman Sword\",\n    \"weaponType\": \"TWO_HANDED_SWORD\",\n    \"damage\": 75,\n    \"durability\": 250,\n    \"element\": \"FIRE\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8082/api/v1/weapons/{{weapon_id}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "api",
+            "v1",
+            "weapons",
+            "{{weapon_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "PATCH - Update Weapon",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"damage\": 85,\n    \"element\": \"ICE\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8082/api/v1/weapons/{{weapon_id}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "api",
+            "v1",
+            "weapons",
+            "{{weapon_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "DELETE - Delete Weapon",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/api/v1/weapons/{{weapon_id}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "api",
+            "v1",
+            "weapons",
+            "{{weapon_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET - Swagger UI (Public)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/swagger-ui.html",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "swagger-ui.html"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "weapon_id",
+      "value": "",
+      "description": "ID del arma a usar en las pruebas"
+    }
+  ]
+}
