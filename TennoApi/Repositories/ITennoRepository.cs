@@ -9,4 +9,6 @@ public interface ITennoRepository
     Task<IEnumerable<TennoDocument>> GetByMasteryRankAsync(int masteryRank, CancellationToken cancellationToken);
     Task<TennoDocument> CreateAsync(TennoDocument tenno, CancellationToken cancellationToken);
     Task<IEnumerable<TennoDocument>> CreateManyAsync(IEnumerable<TennoDocument> tennos, CancellationToken cancellationToken);
+    Task UpdateAsync(TennoDocument tenno, CancellationToken cancellationToken);
+    Task DeleteAsync(string id, CancellationToken cancellationToken);
 }

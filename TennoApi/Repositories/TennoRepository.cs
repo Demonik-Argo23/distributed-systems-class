@@ -42,4 +42,21 @@ public class TennoRepository : ITennoRepository
         await _tennos.InsertManyAsync(tennoList, cancellationToken: cancellationToken);
         return tennoList;
     }
+
+    public async Task UpdateAsync(TennoDocument tenno, CancellationToken cancellationToken)
+    {
+        var update = Builders<TennoDocument>.Update
+            .Set(t => t.Name, tenno.Name)
+            .Set(t => t.Clan, tenno.Clan)
+            .Set(t => t.MasteryRank, tenno.MasteryRank)
+            .Set(t => t.FocusSchool, tenno.FocusSchool)
+            .Set(t => t.Stats, tenno.Stats);
+
+        await _tennos.UpdateOneAsync(t => t.Id == tenno.Id, update, cancellationToken: cancellationToken);
+    }
+
+    public async Task DeleteAsync(string id, CancellationToken cancellationToken)
+    {
+        await _tennos.DeleteOneAsync(t => t.Id == id, cancellationToken);
+    }
 }

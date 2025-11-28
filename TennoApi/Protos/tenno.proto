@@ -10,7 +10,9 @@ service TennoService {
     rpc GetTennoById (TennoByIdRequest) returns (TennoResponse); //Unary call
     rpc CreateTennos (stream CreateTennoRequest) returns (CreateTennoResponse); //Client streaming
     rpc GetAllTennosByName (TennosByNameRequest) returns (stream TennoResponse); //Server streaming
-    rpc GetTennosByMastery (TennosByMasteryRequest) returns (stream TennoResponse); 
+    rpc GetTennosByMastery (TennosByMasteryRequest) returns (stream TennoResponse);
+    rpc UpdateTenno (UpdateTennoRequest) returns (TennoResponse); //Unary call
+    rpc DeleteTenno (TennoByIdRequest) returns (DeleteTennoResponse); //Unary call
 }
 
 message TennosByNameRequest {
@@ -53,4 +55,18 @@ message TennoStats {
     int32 total_weapons = 2;
     int32 total_companions = 3;
     int32 mission_completed = 4;
+}
+
+message UpdateTennoRequest {
+    string id = 1;
+    string name = 2;
+    string clan = 3;
+    int32 mastery_rank = 4;
+    string focus_school = 5;
+    TennoStats stats = 6;
+}
+
+message DeleteTennoResponse {
+    bool success = 1;
+    string message = 2;
 }

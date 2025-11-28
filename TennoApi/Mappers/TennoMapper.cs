@@ -43,4 +43,15 @@ public static class TennoMapper
             CreatedAt = DateTime.UtcNow
         };
     }
+
+    public static TennoStatsDocument ToDocument(this TennoStats stats)
+    {
+        return new TennoStatsDocument
+        {
+            TotalWarframes = stats.TotalWarframes,
+            TotalWeapons = stats.TotalWeapons,
+            TotalCompanions = stats.TotalCompanions,
+            MissionCompleted = stats.MissionCompleted
+        };
+    }
 }
