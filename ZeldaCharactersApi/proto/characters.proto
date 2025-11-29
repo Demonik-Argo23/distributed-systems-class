@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package characters;
+
+// Service definition with 3 required methods
+service CharacterService {
+  // UNARY: Get a single character by ID
+  rpc GetCharacter(GetCharacterRequest) returns (CharacterResponse);
+  
+  // CLIENT STREAMING: Create multiple characters in batch
+  rpc CreateCharactersBatch(stream CreateCharacterRequest) returns (BatchResponse);
+  
+  // SERVER STREAMING: List characters filtered by game
+  rpc ListCharactersByGame(ListCharactersRequest) returns (stream CharacterResponse);
+  
+  // Additional UNARY methods for full CRUD
+  rpc CreateCharacter(CreateCharacterRequest) returns (CharacterResponse);
+  rpc UpdateCharacter(UpdateCharacterRequest) returns (CharacterResponse);
+  rpc DeleteCharacter(DeleteCharacterRequest) returns (DeleteResponse);
+  rpc ListCharactersByWeapon(WeaponFilterRequest) returns (CharacterListResponse);
+}
+
+// Request messages
+message GetCharacterRequest {
+  string id = 1; // MongoDB ObjectId as string
+}
+
+message CreateCharacterRequest {
+  string name = 1;           // Required, min 2 chars
+  string email = 2;          // Required, valid email format
+  string game = 3;           // Required (e.g., "Breath of the Wild")
+  string race = 4;           // Optional (Hylian, Goron, Zora, etc.)
+  int32 health = 5;          // Required, range 1-999
+  int32 stamina = 6;         // Required, range 1-999
+  int32 attack = 7;          // Required, range 1-999
+  int32 defense = 8;         // Required, range 1-999
+  repeated string weapons = 9; // List of weapon IDs (from weapons API)
+}
+
+message UpdateCharacterRequest {
+  string id = 1;             // Required
+  string name = 2;           // Optional
+  string email = 3;          // Optional, valid email if provided
+  string game = 4;           // Optional
+  string race = 5;           // Optional
+  int32 health = 6;          // Optional, range 1-999 if provided
+  int32 stamina = 7;         // Optional, range 1-999 if provided
+  int32 attack = 8;          // Optional, range 1-999 if provided
+  int32 defense = 9;         // Optional, range 1-999 if provided
+  repeated string weapons = 10; // Optional
+}
+
+message DeleteCharacterRequest {
+  string id = 1; // Required
+}
+
+message ListCharactersRequest {
+  string game = 1; // Required for filtering
+  int32 limit = 2; // Optional, default 100, max 1000
+}
+
+message WeaponFilterRequest {
+  string weapon_id = 1; // Required
+}
+
+// Response messages
+message CharacterResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string game = 4;
+  string race = 5;
+  int32 health = 6;
+  int32 stamina = 7;
+  int32 attack = 8;
+  int32 defense = 9;
+  repeated string weapons = 10;
+  string created_at = 11;
+  string updated_at = 12;
+}
+
+message BatchResponse {
+  int32 created_count = 1;
+  repeated string created_ids = 2;
+  repeated string errors = 3;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message CharacterListResponse {
+  repeated CharacterResponse characters = 1;
+}

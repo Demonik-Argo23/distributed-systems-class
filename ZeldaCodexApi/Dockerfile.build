@@ -1,0 +1,18 @@
+# Dockerfile para compilar y generar código gRPC
+FROM maven:3.9-eclipse-temurin-17 AS build
+
+WORKDIR /app
+
+# Copiar pom.xml primero para cachear dependencias
+COPY pom.xml .
+
+# Descargar dependencias
+RUN mvn dependency:go-offline -B
+
+# Copiar código fuente
+COPY src src
+
+# Compilar y generar código gRPC (sin tests por ahora)
+RUN mvn clean compile -DskipTests
+
+# El código generado estará en target/generated-sources/protobuf/
