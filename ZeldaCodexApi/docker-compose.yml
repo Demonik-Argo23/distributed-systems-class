@@ -10,8 +10,11 @@ services:
       - ZELDA_WEAPONS_SOAP_URL=http://zelda-weapons-api:8081/ws
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - GRPC_CHARACTERS_HOST=zelda-characters-grpc
+      - GRPC_CHARACTERS_PORT=50051
     depends_on:
       - zelda-weapons-api
+      - zelda-characters-grpc
       - redis
       - hydra
     networks:
@@ -94,9 +97,46 @@ services:
       - zelda-network
     restart: unless-stopped
 
+  # gRPC Characters Service (Python)
+  zelda-characters-mongodb:
+    image: mongo:7.0
+    container_name: zelda-characters-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: zelda_characters
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ../ZeldaCharactersApi/scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - zelda-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zelda-characters-grpc:
+    build:
+      context: ../ZeldaCharactersApi
+      dockerfile: Dockerfile
+    container_name: zelda-characters-grpc
+    ports:
+      - "50051:50051"
+    environment:
+      - MONGO_URI=mongodb://zelda-characters-mongodb:27017/
+      - MONGO_DB=zelda_characters
+      - GRPC_PORT=50051
+    depends_on:
+      zelda-characters-mongodb:
+        condition: service_healthy
+    networks:
+      - zelda-network
+
 volumes:
   postgres_data:
   redis_data:
+  mongodb_data:
 
 networks:
   zelda-network:

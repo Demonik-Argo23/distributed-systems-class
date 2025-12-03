@@ -18,6 +18,8 @@ import com.zelda.weapons.ws.DeleteWeaponRequest;
 import com.zelda.weapons.ws.DeleteWeaponResponse;
 import com.zelda.weapons.ws.GetWeaponRequest;
 import com.zelda.weapons.ws.GetWeaponResponse;
+import com.zelda.weapons.ws.UpdateWeaponRequest;
+import com.zelda.weapons.ws.UpdateWeaponResponse;
 
 @Endpoint
 public class WeaponEndpoint {
@@ -80,6 +82,29 @@ public class WeaponEndpoint {
             response.setSuccess(false);
             response.setMessage("Error al eliminar arma: " + e.getMessage());
             return response;
+        }
+    }
+
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "updateWeaponRequest")
+    @ResponsePayload
+    public UpdateWeaponResponse updateWeapon(@RequestPayload UpdateWeaponRequest request) {
+        try {
+            UUID weaponId = UUID.fromString(request.getId());
+            Weapon weaponEntity = weaponMapper.soapInputToEntity(request.getWeaponInput());
+            Weapon updatedWeapon = weaponService.updateWeapon(weaponId, weaponEntity);
+            com.zelda.weapons.ws.Weapon weaponSoap = weaponMapper.entityToSoap(updatedWeapon);
+            
+            UpdateWeaponResponse response = new UpdateWeaponResponse();
+            response.setWeapon(weaponSoap);
+            return response;
+            
+        } catch (WeaponAlreadyExistsException ex) {
+            throw new RuntimeException("ALREADY_EXISTS: " + ex.getMessage());
+        } catch (Exception ex) {
+            if (ex.getMessage().contains("no encontrada")) {
+                throw new RuntimeException("NOT_FOUND: " + ex.getMessage());
+            }
+            throw new RuntimeException("ERROR: " + ex.getMessage());
         }
     }
 }

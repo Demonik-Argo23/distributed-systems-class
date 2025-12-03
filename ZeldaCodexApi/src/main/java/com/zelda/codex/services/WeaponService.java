@@ -38,7 +38,11 @@ public class WeaponService implements IWeaponService {
     }
 
     @Override
-    @Cacheable(value = "weaponsList", key = "#pageable.pageNumber + '_' + #pageable.pageSize + '_' + #filters.toString()")
+    @Cacheable(
+        value = "weaponsList", 
+        key = "T(String).format('%d_%d_%s_%s', #pageable.pageNumber, #pageable.pageSize, #pageable.sort.toString(), #filters.toString())",
+        unless = "#result == null || #result.isEmpty()"
+    )
     public Page<Weapon> getAllWeapons(Pageable pageable, Map<String, String> filters) {
         logger.info("Obteniendo lista de armas - Página {}, Tamaño {}, Filtros {} - Cache MISS", 
                    pageable.getPageNumber(), pageable.getPageSize(), filters);
