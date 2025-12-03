@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bindings version="3.0" xmlns="https://jakarta.ee/xml/ns/jaxb">
+  <!--
+
+Este archivo ha sido generado por Eclipse Implementation of JAXB v3.0.0 
+Visite https://eclipse-ee4j.github.io/jaxb-ri 
+Todas las modificaciones realizadas en este archivo se perderán si se vuelve a compilar el esquema de origen. 
+Generado el: 2025.10.30 a las 03:53:52 PM CST 
+
+  -->
+  <bindings scd="x-schema::tns" xmlns:tns="http://zelda.com/weapons">
+    <schemaBindings map="false">
+      <package name="com.zelda.codex.soap"/>
+    </schemaBindings>
+    <bindings scd="tns:getWeaponRequest">
+      <class ref="com.zelda.codex.soap.GetWeaponRequest"/>
+    </bindings>
+    <bindings scd="tns:getWeaponResponse">
+      <class ref="com.zelda.codex.soap.GetWeaponResponse"/>
+    </bindings>
+    <bindings scd="~tns:weapon">
+      <class ref="com.zelda.codex.soap.Weapon"/>
+    </bindings>
+    <bindings scd="tns:createWeaponRequest">
+      <class ref="com.zelda.codex.soap.CreateWeaponRequest"/>
+    </bindings>
+    <bindings scd="~tns:weaponInput">
+      <class ref="com.zelda.codex.soap.WeaponInput"/>
+    </bindings>
+    <bindings scd="tns:createWeaponResponse">
+      <class ref="com.zelda.codex.soap.CreateWeaponResponse"/>
+    </bindings>
+    <bindings scd="tns:deleteWeaponRequest">
+      <class ref="com.zelda.codex.soap.DeleteWeaponRequest"/>
+    </bindings>
+    <bindings scd="tns:deleteWeaponResponse">
+      <class ref="com.zelda.codex.soap.DeleteWeaponResponse"/>
+    </bindings>
+    <bindings scd="~tns:weaponType">
+      <typesafeEnumClass ref="com.zelda.codex.soap.WeaponType"/>
+    </bindings>
+    <bindings scd="~tns:element">
+      <typesafeEnumClass ref="com.zelda.codex.soap.Element"/>
+    </bindings>
+  </bindings>
+</bindings>
+

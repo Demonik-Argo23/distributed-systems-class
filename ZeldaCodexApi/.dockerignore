@@ -1,0 +1,82 @@
+# ==================================================
+# Docker .dockerignore
+# ==================================================
+
+# Git files
+.git/
+.gitignore
+
+# Documentation (not needed in container)
+README*.md
+CHANGELOG*.md
+*.md
+docs/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Build artifacts (will be built inside container)
+target/
+build/
+out/
+*.class
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs (will be generated in container)
+*.log
+logs/
+
+# Test files (not needed in production image)
+src/test/
+**/test/**
+**/*Test.java
+**/*Tests.java
+
+# Build tools (handled in Dockerfile)
+.gradle/
+gradle/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Environment files (use secrets management instead)
+.env*
+*.properties.local
+
+# Coverage reports
+coverage/
+.coverage
+*.lcov
+
+# Cache directories
+.cache/
+node_modules/
+
+# Backup files
+*.bak
+*.backup
+
+# Docker files that shouldn't be in the image
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Development scripts
+setup-*.sh
+*.dev.sh
+
+# Security keys (should never be in container)
+*.key
+*.pem
+*.crt
+*.p12
+*.jks

@@ -1,0 +1,264 @@
+# ==================================================
+# Java/Spring Boot .gitignore
+# ==================================================
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+# ==================================================
+# Build artifacts (Docker builds)
+# ==================================================
+target/
+build/
+out/
+*.jar
+*.war
+
+# ==================================================
+# IDE specific files
+# ==================================================
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# ==================================================
+# Spring Boot specific
+# ==================================================
+
+# Spring Boot DevTools
+.spring-boot-devtools.properties
+
+# Spring Boot build info
+build-info.properties
+
+# ==================================================
+# Docker & Docker Compose
+# ==================================================
+
+# Docker volumes data (if using named volumes)
+docker-volumes/
+.docker/
+
+# Docker Compose override files
+docker-compose.override.yml
+docker-compose.local.yml
+docker-compose.dev.yml
+
+# ==================================================
+# Database files (if using embedded databases for testing)
+# ==================================================
+*.db
+*.sqlite
+*.sqlite3
+h2/
+hsqldb/
+
+# ==================================================
+# Cache and temporary files
+# ==================================================
+
+# Redis dump files (if persisted locally)
+dump.rdb
+appendonly.aof
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==================================================
+# Security and Environment
+# ==================================================
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+*.truststore
+
+# OAuth2 and JWT keys (if stored locally)
+oauth-keys/
+jwt-keys/
+
+# ==================================================
+# Operating System
+# ==================================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+
+# Linux
+*~
+.nfs*
+
+# ==================================================
+# Documentation and Build artifacts
+# ==================================================
+
+# Generated documentation
+docs/build/
+site/
+
+# Coverage reports
+.coverage
+coverage/
+*.lcov
+jacoco.exec
+jacoco-it.exec
+
+# SonarQube
+.sonar/
+.scannerwork/
+
+# ==================================================
+# Application specific
+# ==================================================
+
+# Application logs
+logs/
+application*.log
+spring.log
+
+# Generated SOAP artifacts (keep sources, ignore generated)
+src/main/java/**/soap/generated/
+
+# Docker build artifacts
+.docker/
+docker-build/
+
+# ==================================================
+# Backup and versioning
+# ==================================================
+*.bak
+*.backup
+*.orig
+*.rej
+
+# Git merge conflict files
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+
+# ==================================================
+# Docker specific
+# ==================================================
+
+# Docker volumes and bind mounts
+volumes/
+data/
+
+# Docker build cache
+.docker-cache/
+
+# Docker secrets (never commit these!)
+secrets/
+certs/
+
+# ==================================================
+# Node.js (if using frontend tools)
+# ==================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==================================================
+# Keep important files
+# ==================================================
+
+# Keep empty directories with .gitkeep
+!.gitkeep
+
+# Keep Docker files
+!Dockerfile*
+!docker-compose*.yml
+!.dockerignore
+
+# Keep configuration templates
+!*.example
+!*.template
+!*.sample
+
+# Keep shell scripts
+!*.sh
+
+# Keep documentation
+!README*.md
+!CHANGELOG*.md
+!LICENSE*
+!*.md
