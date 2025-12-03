@@ -1,4 +1,4 @@
-namespace Pokedex.Dtos;
+namespace PokedexApi.Dtos;
 public class PatchPokemonRequest
 {
     public string? Name { get; set; }
