@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package tennopb;
+
+option csharp_namespace = "TennoApi";
+
+import "google/protobuf/timestamp.proto";
+
+service TennoService {
+    rpc GetTennoById (TennoByIdRequest) returns (TennoResponse); //Unary call
+    rpc CreateTennos (stream CreateTennoRequest) returns (CreateTennoResponse); //Client streaming
+    rpc GetAllTennosByName (TennosByNameRequest) returns (stream TennoResponse); //Server streaming
+    rpc GetTennosByMastery (TennosByMasteryRequest) returns (stream TennoResponse);
+    rpc UpdateTenno (UpdateTennoRequest) returns (TennoResponse); //Unary call
+    rpc DeleteTenno (TennoByIdRequest) returns (DeleteTennoResponse); //Unary call
+}
+
+message TennosByNameRequest {
+    string name = 1;
+}
+
+message TennosByMasteryRequest {
+    int32 mastery_rank = 1;
+}
+
+message CreateTennoRequest {
+    string name = 1;
+    string clan = 2;
+    int32 mastery_rank = 3;
+    string focus_school = 4;
+    TennoStats stats = 5;
+}
+
+message TennoByIdRequest {
+    string id = 1;
+}
+
+message TennoResponse {
+    string id = 1;
+    string name = 2;
+    string clan = 3;
+    int32 mastery_rank = 4;
+    string focus_school = 5;
+    TennoStats stats = 6;
+    google.protobuf.Timestamp created_at = 7;
+}
+
+message CreateTennoResponse {
+    repeated TennoResponse tennos = 1;
+    int32 total_created = 2;
+}
+
+message TennoStats {
+    int32 total_warframes = 1;
+    int32 total_weapons = 2;
+    int32 total_companions = 3;
+    int32 mission_completed = 4;
+}
+
+message UpdateTennoRequest {
+    string id = 1;
+    string name = 2;
+    string clan = 3;
+    int32 mastery_rank = 4;
+    string focus_school = 5;
+    TennoStats stats = 6;
+}
+
+message DeleteTennoResponse {
+    bool success = 1;
+    string message = 2;
+}
