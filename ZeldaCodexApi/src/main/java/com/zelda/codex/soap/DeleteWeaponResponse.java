@@ -2,7 +2,7 @@
 // Este archivo ha sido generado por Eclipse Implementation of JAXB v3.0.0 
 // Visite https://eclipse-ee4j.github.io/jaxb-ri 
 // Todas las modificaciones realizadas en este archivo se perderán si se vuelve a compilar el esquema de origen. 
-// Generado el: 2025.10.30 a las 03:55:44 PM CST 
+// Generado el: 2025.12.02 a las 02:30:03 PM CST 
 //
 
 
@@ -25,6 +25,7 @@ import jakarta.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="success" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
+ *         &lt;element name="message" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -35,12 +36,14 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "success"
+    "success",
+    "message"
 })
 @XmlRootElement(name = "deleteWeaponResponse")
 public class DeleteWeaponResponse {
 
     protected boolean success;
+    protected String message;
 
     /**
      * Obtiene el valor de la propiedad success.
@@ -56,6 +59,30 @@ public class DeleteWeaponResponse {
      */
     public void setSuccess(boolean value) {
         this.success = value;
+    }
+
+    /**
+     * Obtiene el valor de la propiedad message.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getMessage() {
+        return message;
+    }
+
+    /**
+     * Define el valor de la propiedad message.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setMessage(String value) {
+        this.message = value;
     }
 
 }

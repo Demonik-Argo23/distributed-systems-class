@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: zelda-characters-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: zelda_characters
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - zelda-network
+
+  grpc-service:
+    build: .
+    container_name: zelda-characters-grpc
+    ports:
+      - "50051:50051"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/
+      MONGO_DB: zelda_characters
+      GRPC_PORT: 50051
+    depends_on:
+      - mongodb
+    networks:
+      - zelda-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  zelda-network:
+    driver: bridge
