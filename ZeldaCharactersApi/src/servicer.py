@@ -219,7 +219,16 @@ class CharacterServicer(characters_pb2_grpc.CharacterServiceServicer):
         if request.name:
             update_doc['name'] = request.name.strip()
         if request.email:
-            update_doc['email'] = request.email.strip().lower()
+            new_email = request.email.strip().lower()
+            # Solo verificar duplicado si el email está cambiando
+            if new_email != existing.get('email'):
+                # Verificar si el nuevo email ya existe en otro documento
+                email_exists = self.collection.find_one({'email': new_email, '_id': {'$ne': query_id}})
+                if email_exists:
+                    context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+                    context.set_details(f"Email {request.email} is already in use")
+                    return characters_pb2.CharacterResponse()
+            update_doc['email'] = new_email
         if request.game:
             update_doc['game'] = request.game.strip()
         if request.race:

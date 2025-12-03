@@ -2,11 +2,11 @@
 // Este archivo ha sido generado por Eclipse Implementation of JAXB v3.0.0 
 // Visite https://eclipse-ee4j.github.io/jaxb-ri 
 // Todas las modificaciones realizadas en este archivo se perderán si se vuelve a compilar el esquema de origen. 
-// Generado el: 2025.12.02 a las 02:30:03 PM CST 
+// Generado el: 2025.12.02 a las 07:22:31 PM CST 
 //
 
 
-package com.zelda.codex.soap;
+package com.zelda.weapons.ws;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
@@ -25,6 +25,7 @@ import jakarta.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
+ *         &lt;element name="id" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="weaponInput" type="{http://zelda.com/weapons}weaponInput"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -36,13 +37,40 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
+    "id",
     "weaponInput"
 })
-@XmlRootElement(name = "createWeaponRequest")
-public class CreateWeaponRequest {
+@XmlRootElement(name = "updateWeaponRequest")
+public class UpdateWeaponRequest {
 
     @XmlElement(required = true)
+    protected String id;
+    @XmlElement(required = true)
     protected WeaponInput weaponInput;
+
+    /**
+     * Obtiene el valor de la propiedad id.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Define el valor de la propiedad id.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setId(String value) {
+        this.id = value;
+    }
 
     /**
      * Obtiene el valor de la propiedad weaponInput.

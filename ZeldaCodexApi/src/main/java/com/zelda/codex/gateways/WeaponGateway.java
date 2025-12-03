@@ -35,6 +35,8 @@ import com.zelda.codex.soap.DeleteWeaponRequest;
 import com.zelda.codex.soap.DeleteWeaponResponse;
 import com.zelda.codex.soap.GetWeaponRequest;
 import com.zelda.codex.soap.GetWeaponResponse;
+import com.zelda.codex.soap.UpdateWeaponRequest;
+import com.zelda.codex.soap.UpdateWeaponResponse;
 import com.zelda.codex.soap.WeaponInput;
 
 @Component
@@ -165,12 +167,41 @@ public class WeaponGateway implements IWeaponGateway {
     @Override
     public Weapon replaceWeapon(UUID id, Weapon weapon) {
         try {
-            getWeaponById(id);
-            weapon.setId(id);
-            return createWeapon(weapon);
+            logger.info("Reemplazando arma con ID {} en el servicio SOAP", id);
             
+            UpdateWeaponRequest request = new UpdateWeaponRequest();
+            request.setId(id.toString());
+            
+            WeaponInput weaponInput = weaponMapper.modelToSoapInput(weapon);
+            request.setWeaponInput(weaponInput);
+            
+            UpdateWeaponResponse response = (UpdateWeaponResponse) webServiceTemplate.marshalSendAndReceive(
+                soapServiceUrl, request);
+            
+            if (response == null || response.getWeapon() == null) {
+                throw new SoapServiceException("Respuesta vacía del servicio SOAP al actualizar arma");
+            }
+            
+            return weaponMapper.soapToModel(response.getWeapon());
+            
+        } catch (SoapFaultClientException ex) {
+            logger.error("Error SOAP al actualizar arma con ID {}: {}", id, ex.getFaultStringOrReason());
+            if (ex.getFaultStringOrReason().contains("NOT_FOUND")) {
+                throw new WeaponNotFoundException(id);
+            }
+            if (ex.getFaultStringOrReason().contains("ALREADY_EXISTS")) {
+                throw new WeaponAlreadyExistsException(weapon.getName());
+            }
+            throw new SoapValidationException("Error de validación en el servicio SOAP: " + ex.getFaultStringOrReason());
+        } catch (WeaponNotFoundException | WeaponAlreadyExistsException ex) {
+            throw ex;
         } catch (Exception ex) {
-            throw new WeaponNotFoundException(id);
+            if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketTimeoutException) {
+                logger.error("Servicio SOAP no disponible: {}", ex.getMessage());
+                throw new SoapServiceUnavailableException("El servicio SOAP no está disponible");
+            }
+            logger.error("Error genérico en servicio SOAP: {}", ex.getMessage());
+            throw new SoapServiceException("Error en el servicio SOAP: " + ex.getMessage());
         }
     }
 
@@ -179,31 +210,50 @@ public class WeaponGateway implements IWeaponGateway {
         try {
             logger.info("Actualizando arma con ID {} via SOAP. Campos a actualizar: {}", id, updates.keySet());
             
+            // Obtener el arma existente
             Weapon existingWeapon = getWeaponById(id);
             logger.debug("Arma existente obtenida: {}", existingWeapon.getName());
             
+            // Crear una copia y aplicar las actualizaciones parciales
             Weapon updatedWeapon = createWeaponCopy(existingWeapon);
-            
             applyUpdatesToWeapon(updatedWeapon, updates);
             logger.debug("Actualizaciones aplicadas. Nueva versión: {}", updatedWeapon.getName());
             
-            boolean deleted = deleteWeapon(id);
-            if (!deleted) {
-                throw new SoapServiceException("No se pudo eliminar el arma existente para la actualización");
+            // Usar el endpoint de actualización SOAP que mantiene el ID
+            UpdateWeaponRequest request = new UpdateWeaponRequest();
+            request.setId(id.toString());
+            
+            WeaponInput weaponInput = weaponMapper.modelToSoapInput(updatedWeapon);
+            request.setWeaponInput(weaponInput);
+            
+            UpdateWeaponResponse response = (UpdateWeaponResponse) webServiceTemplate.marshalSendAndReceive(
+                soapServiceUrl, request);
+            
+            if (response == null || response.getWeapon() == null) {
+                throw new SoapServiceException("Respuesta vacía del servicio SOAP al actualizar arma");
             }
             
-            updatedWeapon.setId(id);
-            
-            Weapon result = createWeapon(updatedWeapon);
+            Weapon result = weaponMapper.soapToModel(response.getWeapon());
             logger.info("Arma actualizada exitosamente con ID {}", result.getId());
             
             return result;
             
-        } catch (WeaponNotFoundException ex) {
-            throw ex;
-        } catch (SoapServiceUnavailableException ex) {
+        } catch (SoapFaultClientException ex) {
+            logger.error("Error SOAP al actualizar arma con ID {}: {}", id, ex.getFaultStringOrReason());
+            if (ex.getFaultStringOrReason().contains("NOT_FOUND")) {
+                throw new WeaponNotFoundException(id);
+            }
+            if (ex.getFaultStringOrReason().contains("ALREADY_EXISTS")) {
+                throw new WeaponAlreadyExistsException(updates.getOrDefault("name", "").toString());
+            }
+            throw new SoapValidationException("Error de validación en el servicio SOAP: " + ex.getFaultStringOrReason());
+        } catch (WeaponNotFoundException | WeaponAlreadyExistsException ex) {
             throw ex;
         } catch (Exception ex) {
+            if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketTimeoutException) {
+                logger.error("Servicio SOAP no disponible: {}", ex.getMessage());
+                throw new SoapServiceUnavailableException("El servicio SOAP no está disponible");
+            }
             logger.error("Error al actualizar arma con ID {}: {}", id, ex.getMessage());
             throw new SoapServiceException("Error al actualizar arma: " + ex.getMessage());
         }

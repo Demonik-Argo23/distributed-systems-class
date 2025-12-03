@@ -96,4 +96,21 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="updateWeaponRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="id" type="xs:string"/>
+                <xs:element name="weaponInput" type="tns:weaponInput"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="updateWeaponResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="weapon" type="tns:weapon"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
 </xs:schema>

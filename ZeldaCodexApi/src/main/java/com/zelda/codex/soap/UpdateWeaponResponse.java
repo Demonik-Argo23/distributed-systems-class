@@ -25,7 +25,7 @@ import jakarta.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="weaponInput" type="{http://zelda.com/weapons}weaponInput"/&gt;
+ *         &lt;element name="weapon" type="{http://zelda.com/weapons}weapon"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -36,36 +36,36 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "weaponInput"
+    "weapon"
 })
-@XmlRootElement(name = "createWeaponRequest")
-public class CreateWeaponRequest {
+@XmlRootElement(name = "updateWeaponResponse")
+public class UpdateWeaponResponse {
 
     @XmlElement(required = true)
-    protected WeaponInput weaponInput;
+    protected Weapon weapon;
 
     /**
-     * Obtiene el valor de la propiedad weaponInput.
+     * Obtiene el valor de la propiedad weapon.
      * 
      * @return
      *     possible object is
-     *     {@link WeaponInput }
+     *     {@link Weapon }
      *     
      */
-    public WeaponInput getWeaponInput() {
-        return weaponInput;
+    public Weapon getWeapon() {
+        return weapon;
     }
 
     /**
-     * Define el valor de la propiedad weaponInput.
+     * Define el valor de la propiedad weapon.
      * 
      * @param value
      *     allowed object is
-     *     {@link WeaponInput }
+     *     {@link Weapon }
      *     
      */
-    public void setWeaponInput(WeaponInput value) {
-        this.weaponInput = value;
+    public void setWeapon(Weapon value) {
+        this.weapon = value;
     }
 
 }

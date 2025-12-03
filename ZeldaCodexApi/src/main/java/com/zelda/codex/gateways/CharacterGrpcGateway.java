@@ -240,6 +240,10 @@ public class CharacterGrpcGateway {
                 throw new RuntimeException("Character not found", e);
             }
             
+            if (e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
+                throw new RuntimeException("Email already in use by another character", e);
+            }
+            
             throw new RuntimeException("Error updating character: " + e.getStatus().getDescription(), e);
         }
     }

@@ -2,11 +2,11 @@
 // Este archivo ha sido generado por Eclipse Implementation of JAXB v3.0.0 
 // Visite https://eclipse-ee4j.github.io/jaxb-ri 
 // Todas las modificaciones realizadas en este archivo se perderán si se vuelve a compilar el esquema de origen. 
-// Generado el: 2025.12.02 a las 02:30:03 PM CST 
+// Generado el: 2025.12.02 a las 07:22:31 PM CST 
 //
 
 
-package com.zelda.codex.soap;
+package com.zelda.weapons.ws;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
@@ -25,7 +25,7 @@ import jakarta.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="weaponInput" type="{http://zelda.com/weapons}weaponInput"/&gt;
+ *         &lt;element name="weapon" type="{http://zelda.com/weapons}weapon"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -36,36 +36,36 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "weaponInput"
+    "weapon"
 })
-@XmlRootElement(name = "createWeaponRequest")
-public class CreateWeaponRequest {
+@XmlRootElement(name = "updateWeaponResponse")
+public class UpdateWeaponResponse {
 
     @XmlElement(required = true)
-    protected WeaponInput weaponInput;
+    protected Weapon weapon;
 
     /**
-     * Obtiene el valor de la propiedad weaponInput.
+     * Obtiene el valor de la propiedad weapon.
      * 
      * @return
      *     possible object is
-     *     {@link WeaponInput }
+     *     {@link Weapon }
      *     
      */
-    public WeaponInput getWeaponInput() {
-        return weaponInput;
+    public Weapon getWeapon() {
+        return weapon;
     }
 
     /**
-     * Define el valor de la propiedad weaponInput.
+     * Define el valor de la propiedad weapon.
      * 
      * @param value
      *     allowed object is
-     *     {@link WeaponInput }
+     *     {@link Weapon }
      *     
      */
-    public void setWeaponInput(WeaponInput value) {
-        this.weaponInput = value;
+    public void setWeapon(Weapon value) {
+        this.weapon = value;
     }
 
 }

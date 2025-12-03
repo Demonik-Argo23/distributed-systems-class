@@ -133,6 +133,10 @@ public class CharactersController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
             
+            if (e.getMessage().contains("already in use") || e.getMessage().contains("already exists")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+            }
+            
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }

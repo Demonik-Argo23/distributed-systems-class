@@ -51,6 +51,29 @@ public class WeaponService {
         return true;
     }
 
+    public Weapon updateWeapon(UUID id, @Valid Weapon weaponData) {
+        weaponValidator.validateWeaponId(id);
+        
+        Weapon existingWeapon = weaponRepository.findById(id)
+                .orElseThrow(() -> new WeaponNotFoundException("Arma con ID " + id + " no encontrada"));
+        
+        // Validar que el nuevo nombre no esté en uso por otra arma
+        if (!existingWeapon.getName().equals(weaponData.getName())) {
+            weaponValidator.validateUniqueWeaponName(weaponData);
+        }
+        
+        weaponValidator.validateWeaponData(weaponData);
+        
+        // Actualizar los campos manteniendo el ID
+        existingWeapon.setName(weaponData.getName());
+        existingWeapon.setWeaponType(weaponData.getWeaponType());
+        existingWeapon.setDamage(weaponData.getDamage());
+        existingWeapon.setDurability(weaponData.getDurability());
+        existingWeapon.setElement(weaponData.getElement());
+        
+        return weaponRepository.save(existingWeapon);
+    }
+
     public static class WeaponNotFoundException extends RuntimeException {
         public WeaponNotFoundException(String message) {
             super(message);
